@@ -20,8 +20,8 @@ import java.util.Map;
 @EnableKafka
 @Configuration
 public class KafkaConfig {
-    @Value("${spring.kafka.consumer.group-id}")
-    private String GROUP_ID;
+//    @Value("${spring.kafka.consumer.group-id}")
+//    private String GROUP_ID;
     @Value("${spring.kafka.bootstrap-servers}")
     private String BOOTSTRAP_SERVER;
 
@@ -64,7 +64,7 @@ public class KafkaConfig {
             put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
             put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
             put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-            put(ConsumerConfig.GROUP_ID_CONFIG, GROUP_ID);
+//            put(ConsumerConfig.GROUP_ID_CONFIG, GROUP_ID);
         }};
 
     }

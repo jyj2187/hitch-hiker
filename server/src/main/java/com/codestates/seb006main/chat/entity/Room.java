@@ -24,8 +24,6 @@ public class Room {
     private String name;
     private Long memberId;
     private Long otherId;
-    //    @OneToMany
-    //    private List<Chat> chatList;
 
     @Builder
     public Room(UUID roomId, String name, Long memberId, Long otherId) {

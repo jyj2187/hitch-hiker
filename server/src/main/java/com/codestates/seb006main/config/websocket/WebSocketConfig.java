@@ -16,12 +16,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.setApplicationDestinationPrefixes("/pub");
-        registry.enableSimpleBroker("/topic", "/queue", "/sub");
+        registry.enableSimpleBroker("/topic", "/sub");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-//        registry.addEndpoint("/websocket").setAllowedOrigins("http://localhost:3000", "https://www.hitch-hiker.kr").setAllowedOriginPatterns("*");
         registry.addEndpoint("/websocket").setAllowedOrigins("http://localhost:3000", "https://www.hitch-hiker.kr").setAllowedOriginPatterns("*").withSockJS();
         registry.addEndpoint("/stomp/chat").setAllowedOrigins("http://localhost:3000", "https://www.hitch-hiker.kr").setAllowedOriginPatterns("*").withSockJS();
     }
