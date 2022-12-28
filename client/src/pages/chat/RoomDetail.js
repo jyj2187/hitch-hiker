@@ -12,14 +12,14 @@ const RoomDetail = () => {
 	const { roomId } = useParams();
 	const navigate = useNavigate();
 	const scrollRef = useRef();
+	const client = useRef();
+	const senderId = sessionStorage.getItem("memberId");
 
 	const [room, setRooom] = useState({});
 	const [chat, setChat] = useState([]);
+	const [receiverId, setReceiverId] = useState(0);
 	const [msg, setMsg] = useState("");
 	const [pageNumber, setPageNumber] = useState(1);
-
-	const senderId = sessionStorage.getItem("memberId");
-	const client = useRef();
 
 	/* 
 		권한 없이 접근했을 때 예외를 발생하는 방법이 뭐가 있을까.
@@ -35,11 +35,26 @@ const RoomDetail = () => {
 		})
 			.then((res) => {
 				setRooom(res.data);
+				String(res.data.memberId) === senderId
+					? setReceiverId(res.data.otherId)
+					: setReceiverId(res.data.memberId);
 			})
 			.catch((err) => {
 				ErrorHandler(err);
 				navigate(-1);
 			});
+		axios(
+			`${process.env.REACT_APP_URL}/api/chat/rooms/${roomId}/loadchat?page=${pageNumber}`,
+			{
+				headers: {
+					access_hh: sessionStorage.getItem("AccessToken"),
+				},
+			}
+		).then((res) => {
+			setChat((chat) => [...res.data.data, ...chat]);
+			setPageNumber(pageNumber + 1);
+		});
+
 		connect();
 
 		return () => disconnect();
@@ -66,7 +81,7 @@ const RoomDetail = () => {
 	const connect = () => {
 		const socket = new SockJS(`${process.env.REACT_APP_URL}/stomp/chat`);
 		client.current = Stomp.over(socket);
-		// client.current.debug = null;
+		client.current.debug = null;
 		client.current.connect(
 			{
 				access_hh: sessionStorage.getItem("AccessToken"),
@@ -83,8 +98,6 @@ const RoomDetail = () => {
 					},
 					JSON.stringify({ roomId: roomId })
 				);
-
-				client.current.send();
 			}
 		);
 	};
@@ -96,7 +109,7 @@ const RoomDetail = () => {
 			{
 				access_hh: sessionStorage.getItem("AccessToken"),
 			},
-			JSON.stringify({ roomId: roomId, message: msg })
+			JSON.stringify({ roomId: roomId, message: msg, receiverId: receiverId })
 		);
 		setMsg("");
 	};
@@ -138,7 +151,7 @@ const RoomDetail = () => {
 	return (
 		<ChatRoomStyle>
 			<h1>방 이름 : {room.name}</h1>
-			<p>방 번호 : {room.roomId}</p>
+			<button onClick={() => navigate(-1)}>나가기</button>
 			<ChatBox>
 				<div className="buttonBox">
 					<button className="loadChat" onClick={() => loadChatHandler()}>
@@ -147,7 +160,15 @@ const RoomDetail = () => {
 				</div>
 				<ul className="chatList">
 					{chat.map((el, idx) =>
-						String(el.senderId) === senderId ? (
+						el.chatType === "ENTER" ? (
+							<li className="enter" key={idx}>
+								{el.message}
+							</li>
+						) : el.chatType === "EXIT" ? (
+							<li className="exit" key={idx}>
+								{el.message}
+							</li>
+						) : String(el.senderId) === senderId ? (
 							<li className="myChat" key={idx}>
 								{el.message}
 							</li>
