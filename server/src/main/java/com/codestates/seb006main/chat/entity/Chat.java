@@ -5,10 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Getter
@@ -21,6 +18,10 @@ public class Chat {
     private Long senderId;
     private String message;
     private LocalDateTime sendDate;
+//    @Enumerated(EnumType.STRING)
+//    private ChatType chatType;
+//    @Enumerated(EnumType.STRING)
+//    private ChatStatus chatStatus;
 
     @Builder
     public Chat(Long chatId, String roomId, Long senderId, String message) {
@@ -30,4 +31,12 @@ public class Chat {
         this.message = message;
         this.sendDate = LocalDateTime.now();
     }
+
+    public enum ChatType{
+        ENTER, EXIT, CHAT
+    }
+
+//    public enum ChatStatus {
+//        READ, NOT_READ, EXPIRED, INACTIVE
+//    }
 }

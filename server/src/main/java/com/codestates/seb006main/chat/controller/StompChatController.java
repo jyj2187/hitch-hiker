@@ -1,6 +1,8 @@
 package com.codestates.seb006main.chat.controller;
 
 import com.codestates.seb006main.chat.dto.ChatDto;
+import com.codestates.seb006main.chat.dto.RoomDto;
+import com.codestates.seb006main.chat.entity.Chat;
 import com.codestates.seb006main.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +29,9 @@ public class StompChatController {
     public void enterRoom(ChatDto.Message message, @Header("access_hh") String accessToken) {
         message.setSenderId(chatService.getMemberIdFromToken(accessToken));
         message.setMessage(chatService.getDisplayName(accessToken) + "님이 채팅방에 참여하셨습니다.");
-        template.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
+        message.setChatType(Chat.ChatType.ENTER);
+        kafkaTemplate.send(KAFKA_TOPIC, message);
+//        template.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
     }
 
     @OnMessage
@@ -40,14 +44,25 @@ public class StompChatController {
     // Kafka로 보낸 뒤 저장하기 (메시지 순서 보장 및 손실 방지)
     @KafkaListener(groupId = "#{T(java.util.UUID).randomUUID().toString()}", topics = "${spring.kafka.topic.name}")
     public void receiveMessage(ChatDto.Message message) {
-        chatService.saveChat(message);
+        // TODO: 임시 처리
+        if (message.getChatType() != Chat.ChatType.ENTER && message.getChatType() != Chat.ChatType.EXIT) {
+            chatService.saveChat(message);
+        }
         template.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
+        /*
+            TODO: 좋은 방법이 아닌 것 같다. ServerSentEvent 혹은 조회를 줄일 수 있는 방법을 생각해보자.
+                @TransactionalEventListener로 교체?
+         */
+        template.convertAndSend("/sub/" + message.getSenderId() + "/rooms", chatService.updateRoomList(message.getSenderId()));
+        template.convertAndSend("/sub/" + message.getReceiverId() + "/rooms", chatService.updateRoomList(message.getReceiverId()));
     }
 
     @MessageMapping("/chat/exit")
     public void exitRoom(ChatDto.Message message, @Header("access_hh") String accessToken) {
         message.setSenderId(chatService.getMemberIdFromToken(accessToken));
         message.setMessage(chatService.getDisplayName(accessToken) + "님이 채팅방에서 퇴장하셨습니다.");
-        template.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
+        message.setChatType(Chat.ChatType.EXIT);
+        kafkaTemplate.send(KAFKA_TOPIC, message);
+//        template.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
     }
 }

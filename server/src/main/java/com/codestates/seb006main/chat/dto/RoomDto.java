@@ -1,11 +1,12 @@
 package com.codestates.seb006main.chat.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 public class RoomDto {
     @Getter
@@ -26,29 +27,21 @@ public class RoomDto {
         private String roomId;
         private String name;
         private Long memberId;
+//        private String member;
         private Long otherId;
+//        private String other;
+//        private String lastChatter;
+        private String lastChat;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
+        private LocalDateTime lastChatted;
         @Builder
-        public Response(String roomId, String name, Long memberId, Long otherId) {
+        public Response(String roomId, String name, Long memberId, Long otherId, String lastChat, LocalDateTime lastChatted) {
             this.roomId = roomId;
             this.name = name;
             this.memberId = memberId;
             this.otherId = otherId;
-        }
-    }
-
-    // Sender Receiver 나눌 필요가 없을듯?
-    @Getter
-    @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    public static class ResponseList {
-        private Long memberId;
-        private List<Response> sentRoomList;
-        private List<Response> receivedRoomList;
-
-        @Builder
-        public ResponseList(Long memberId, List<Response> sentRoomList, List<Response> receivedRoomList) {
-            this.memberId = memberId;
-            this.sentRoomList = sentRoomList;
-            this.receivedRoomList = receivedRoomList;
+            this.lastChat = lastChat;
+            this.lastChatted = lastChatted;
         }
     }
 }

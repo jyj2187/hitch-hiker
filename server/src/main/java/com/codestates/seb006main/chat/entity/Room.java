@@ -6,10 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,12 +22,21 @@ public class Room {
     private String name;
     private Long memberId;
     private Long otherId;
+    private String lastChat;
+    private LocalDateTime lastChatted;
 
     @Builder
-    public Room(UUID roomId, String name, Long memberId, Long otherId) {
+    public Room(UUID roomId, String name, Long memberId, Long otherId, String lastChat, LocalDateTime lastChatted) {
         this.roomId = roomId;
         this.name = name;
         this.memberId = memberId;
         this.otherId = otherId;
+        this.lastChat = lastChat;
+        this.lastChatted = lastChatted;
+    }
+
+    public void updateLastChat(Chat chat) {
+        this.lastChat = chat.getMessage();
+        this.lastChatted = chat.getSendDate();
     }
 }

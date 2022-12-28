@@ -1,14 +1,21 @@
+import { Stomp } from "@stomp/stompjs";
 import axios from "axios";
+import { parse } from "query-string";
 import React from "react";
+import { useRef } from "react";
 import { useState } from "react";
 import { useEffect } from "react";
+import SockJS from "sockjs-client";
+import styled from "styled-components";
 import SideBar from "../../components/SideBar";
+import H1 from "../../components/ui/H1";
 import Room from "./Room";
 
 const Rooms = () => {
-	const [rooms, setRooms] = useState({});
-	const [sentRooms, setSentRooms] = useState([]);
-	const [receivedRooms, setReceivedRooms] = useState([]);
+	const client = useRef();
+	const memberId = sessionStorage.getItem("memberId");
+
+	const [rooms, setRooms] = useState([]);
 
 	useEffect(() => {
 		axios(`${process.env.REACT_APP_URL}/api/chat/rooms`, {
@@ -16,51 +23,55 @@ const Rooms = () => {
 				access_hh: sessionStorage.getItem("AccessToken"),
 			},
 		}).then((res) => {
-			setSentRooms([...res.data.sentRoomList]);
-			setReceivedRooms([...res.data.receivedRoomList]);
+			setRooms(res.data.data);
 		});
+		connect();
+
+		return () => disconnect();
 	}, []);
 
+	const connect = () => {
+		const socket = new SockJS(`${process.env.REACT_APP_URL}/stomp/chat`);
+		client.current = Stomp.over(socket);
+		client.current.debug = null;
+		client.current.connect(
+			{
+				access_hh: sessionStorage.getItem("AccessToken"),
+			},
+			() => {
+				client.current.subscribe(
+					"/sub/" + memberId + "/rooms",
+					(updatedRoom) => {
+						setRooms(JSON.parse(updatedRoom.body).data);
+					}
+				);
+			}
+		);
+	};
+
+	const disconnect = () => {
+		client.current.disconnect();
+	};
+
 	return (
-		<div>
-			{/* <Outlet /> */}
-			{/* <input
-				id="name"
-				type="text"
-				required
-				maxLength={16}
-				onChange={(e) => {
-					setName(e.target.value);
-				}}
-				placeholder="채팅방 제목 입력"
-			/>
-			<button
-				onClick={() => {
-					submitHandler();
-				}}>
-				생성
-			</button> */}
+		<>
 			<SideBar />
-			<div className="roomList">
-				<ul className="sentRoomList">
-					{sentRooms &&
-						sentRooms.map((room) => (
-							<li key={room.roomId}>
-								<Room room={room} />
-							</li>
-						))}
-				</ul>
-				<ul className="receivedRoomList">
-					{receivedRooms &&
-						receivedRooms.map((room) => (
-							<li key={room.roomId}>
-								<Room room={room} />
-							</li>
-						))}
-				</ul>
-			</div>
-		</div>
+			<H1>참여 중인 대화</H1>
+			<SRooms>
+				<div className="roomList">
+					<ul className="rooms">
+						{rooms &&
+							rooms.map((room) => (
+								<li key={room.roomId}>
+									<Room room={room} />
+								</li>
+							))}
+					</ul>
+				</div>
+			</SRooms>
+		</>
 	);
 };
 
 export default Rooms;
+const SRooms = styled.div``;

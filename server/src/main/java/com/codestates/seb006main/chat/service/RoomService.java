@@ -123,37 +123,15 @@ public class RoomService {
     }
 
     // Room List를 구분할 필요가 없다.
-    public RoomDto.ResponseList getRooms(Authentication authentication) {
+    public MultiResponseDto getRooms(PageRequest pageRequest, Authentication authentication) {
+        log.info("채팅방 목록 불러오기");
         PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
         Long memberId = principalDetails.getMember().getMemberId();
 
-        List<Room> sentRoomList = roomRepository.findSentRooms(memberId);
-        List<Room> receivedRoomList = roomRepository.findReceivedRooms(memberId);
-
-        log.info("채팅방 목록 불러오기");
-
-        return RoomDto.ResponseList.builder()
-                .memberId(memberId)
-                .sentRoomList(sentRoomList
-                        .stream()
-                        .map(room -> RoomDto.Response.builder()
-                                .roomId(room.getRoomId().toString())
-                                .name(room.getName())
-                                .memberId(room.getMemberId())
-                                .otherId(room.getOtherId())
-                                .build())
-                        .collect(Collectors.toList()))
-                .receivedRoomList(receivedRoomList
-                        .stream()
-                        .map(room -> RoomDto.Response.builder()
-                                .roomId(room.getRoomId().toString())
-                                .name(room.getName())
-                                .memberId(room.getMemberId())
-                                .otherId(room.getOtherId())
-                                .build())
-                        .collect(Collectors.toList()))
-                .build();
-
+        Page<Room> roomPage = roomRepository.findByMemberId(memberId, pageRequest);
+        List<Room> roomList = new ArrayList<>(roomPage.getContent());
+        roomList.sort(Comparator.comparing(Room::getLastChatted, Comparator.nullsFirst(Comparator.reverseOrder())));
+        return new MultiResponseDto(roomMapper.roomListToResponseList(roomList) ,roomPage);
     }
 
     public RoomDto.Response checkRoom(String checkName, Authentication authentication) {
