@@ -6,6 +6,7 @@ import styled from "styled-components";
 
 // import AccountInfo from "./AccountInfo";
 import kakaoLogo from "../../img/kakao.png";
+import googleLogo from "../../img/google.png"
 
 const Login = () => {
   const [validateEmailText, setValidateEmailText] = useState("");
@@ -144,6 +145,17 @@ const Login = () => {
                     className="Button"
                     src={kakaoLogo}
                     alt="./Kakao.png"
+                    width="200"
+                    height="45"
+                  ></img>
+                </a>
+              </div>
+              <div align="center">
+                <a href="https://server.seb-006.shop/oauth2/authorization/google">
+                  <img
+                    className="Button"
+                    src={googleLogo}
+                    alt="./google.png"
                     width="200"
                     height="45"
                   ></img>
