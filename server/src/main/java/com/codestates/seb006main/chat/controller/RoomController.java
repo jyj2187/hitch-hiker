@@ -52,9 +52,11 @@ public class RoomController {
     }
 
     @GetMapping("/rooms")
-    public ResponseEntity getRooms(Authentication authentication) {
+    public ResponseEntity getRooms(@PageableDefault(page = 1, size = 20, sort = "last_chatted", direction = Sort.Direction.DESC) Pageable pageable,
+                                   Authentication authentication) {
         log.info("# All Chat Rooms");
-        RoomDto.ResponseList response = roomService.getRooms(authentication);
+        PageRequest pageRequest = PageRequest.of(pageable.getPageNumber() - 1, pageable.getPageSize(), pageable.getSort());
+        MultiResponseDto response = roomService.getRooms(pageRequest, authentication);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
