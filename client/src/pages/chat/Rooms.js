@@ -1,6 +1,5 @@
-import { Stomp } from "@stomp/stompjs";
+import Stomp from "stompjs";
 import axios from "axios";
-import { parse } from "query-string";
 import React from "react";
 import { useRef } from "react";
 import { useState } from "react";
@@ -33,7 +32,7 @@ const Rooms = () => {
 	const connect = () => {
 		const socket = new SockJS(`${process.env.REACT_APP_URL}/stomp/chat`);
 		client.current = Stomp.over(socket);
-		client.current.debug = null;
+		// client.current.debug = null;
 		client.current.connect(
 			{
 				access_hh: sessionStorage.getItem("AccessToken"),
