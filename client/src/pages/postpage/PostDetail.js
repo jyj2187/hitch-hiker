@@ -504,6 +504,11 @@ const PostDetail = () => {
 					{" "}
 					{detail.leaderName}
 				</div>
+				{/* TODO: 신청자 혹은 신청자가 아니어도 대화 요청할 수 있게 
+					그리고, 신청자의 대화하기 버튼은 삭제*/}
+				{/* {memberId !== String(detail.leaderId) ? (
+					<button>대화 요청</button>
+				) : null} */}
 				<Container>
 					<ContentContainer>
 						<FlexContainer>
@@ -656,6 +661,7 @@ const ContainerWrap = styled.div`
 	padding: 1rem;
 	width: 87.72% !important;
 	max-width: 1080px;
+	height: fit-content;
 	min-height: 1024px;
 	background-color: rgba(255, 255, 255, 0.8);
 	box-shadow: 1px 5px 10px rgba(0, 0, 0, 0.1);
@@ -740,6 +746,7 @@ const Container = styled.div`
 const ContentContainer = styled.div`
 	flex: 2;
 	height: 100%;
+	max-width: calc((100% / 3) * 2) !important;
 `;
 
 const FlexContainer = styled.div`
@@ -778,6 +785,7 @@ const FlexContainer = styled.div`
 const BodyContainer = styled.div`
 	border-top: 0.1rem solid black;
 	width: 100%;
+	overflow-x: auto;
 
 	.viewer {
 		padding: 10px;
@@ -792,6 +800,7 @@ const MatchingContainer = styled.div`
 	flex-direction: column;
 	padding-left: 0.5rem;
 	border-left: 0.05rem solid rgba(0, 0, 0, 0.3);
+	min-height: 1024px;
 
 	p {
 		font-size: 1.25rem;
@@ -804,16 +813,16 @@ const MatchingContainer = styled.div`
 	}
 
 	.participants {
-		flex: 1 0 50%;
+		// flex: 1 0 50%;
 	}
 
 	.application {
-		flex: 2 0 50%;
+		// flex: 2 0 50%;
 		margin: 0.5rem 0;
 	}
 
 	.applicants {
-		flex: 1 0 50%;
+		// flex: 1 0 50%;
 	}
 `;
 
