@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 const Post = ({ post }) => {
 	const navigate = useNavigate();
 	const [isbookmark, setIsBookmark] = useState(false);
@@ -107,7 +107,7 @@ const Post = ({ post }) => {
 	};
 
 	return (
-		<PostStyle>
+		<PostStyle isClosed={post.postsStatus === "모집 마감"}>
 			<div
 				className="postBox"
 				onClick={() => navigate(`/post/${post.postId}`, { state: post })}>
@@ -124,6 +124,7 @@ const Post = ({ post }) => {
 					<p className="postBody">{post.body}</p>
 					<p className="participants">
 						모집 인원 {post.participantsCount} / {post.totalCount} |
+						<span className="closeDate">{post.closeDate} 까지</span>
 						<span className="status"> {post.postsStatus} </span>
 					</p>
 				</div>
@@ -150,10 +151,13 @@ export default Post;
 const PostStyle = styled.div`
 	margin: 0.5rem;
 	padding: 0.625rem;
-	border-radius: 2px;
 	outline: none;
 
-	border-radius: 5px;
+	${(props) =>
+		props.isClosed &&
+		css`
+			filter: grayscale(100%);
+		`}
 
 	.postBox {
 		cursor: pointer;
@@ -193,7 +197,7 @@ const PostStyle = styled.div`
 
 		.postTitle {
 			font-size: 1.125rem;
-			min-height: 2rem;
+			min-height: 1.5rem;
 			overflow: hidden;
 			text-overflow: ellipsis;
 			font-style: normal;
@@ -201,8 +205,14 @@ const PostStyle = styled.div`
 			margin: 0;
 			word-break: keep-all;
 			overflow-wrap: anywhere;
-			line-height: 144.4%
-			letter-spacing: -.00002em;
+			line-height: 120%;
+			letter-spacing: -0.00002em;
+
+			white-space: normal;
+			word-wrap: break-word;
+			display: -webkit-box;
+			-webkit-line-clamp: 1;
+			-webkit-box-orient: vertical;
 		}
 
 		.postBody {
@@ -213,11 +223,11 @@ const PostStyle = styled.div`
 			margin: 0;
 			font-weight: 400;
 			letter-spacing: 0.025em;
-			white-space: nowrap;
+			// white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
 			word-break: keep-all;
-			overflow-wrap: anywhere;
+			// overflow-wrap: anywhere;
 
 			white-space: normal;
 			word-wrap: break-word;
@@ -225,34 +235,39 @@ const PostStyle = styled.div`
 			-webkit-line-clamp: 2;
 			-webkit-box-orient: vertical;
 		}
-
-
 	}
 
 	.participants {
 		display: flex;
 		align-items: center;
+		flex-wrap: wrap;
 		font-size: 0.9rem;
 		font-weight: 600;
 		color: #444444;
-    }
+	}
+
+	.closeDate {
+		margin-left: 0.25rem;
+	}
 
 	.status {
 		padding: 0.2rem 0.5rem;
 		border: 0.5px solid black;
 		border-radius: 8px;
-		margin-left: 0.375rem;
+		margin-left: auto;
 	}
 
 	.bookmark {
+		padding: 0.5rem 0.75rem;
 		margin-left: auto;
 	}
 
 	.postInfo {
 		display: flex;
 		align-items: flex-end;
-		grid-gap: 6px;
-		gap: 6px;
+		margin-top: 0.5rem;
+		grid-gap: 0.25rem;
+		gap: 0.25rem;
 		padding: 1px 0;
 
 		span {
@@ -260,11 +275,11 @@ const PostStyle = styled.div`
 			font-size: 0.9rem;
 			line-height: 133.3%;
 			font-weight: 600;
-			letter-spacing: .032em;
+			letter-spacing: 0.032em;
 
 			overflow: hidden;
 			text-overflow: ellipsis;
-			white-space: nowrap;  
+			white-space: nowrap;
 		}
 	}
 `;

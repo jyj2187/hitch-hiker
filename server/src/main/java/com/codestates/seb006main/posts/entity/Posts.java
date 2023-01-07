@@ -2,6 +2,8 @@ package com.codestates.seb006main.posts.entity;
 
 import com.codestates.seb006main.Image.entity.Image;
 import com.codestates.seb006main.audit.Auditable;
+import com.codestates.seb006main.exception.BusinessLogicException;
+import com.codestates.seb006main.exception.ExceptionCode;
 import com.codestates.seb006main.matching.entity.Matching;
 import com.codestates.seb006main.members.entity.Bookmark;
 import com.codestates.seb006main.members.entity.Member;
@@ -66,11 +68,11 @@ public class Posts extends Auditable {
         INACTIVE(0, "비활성화"),
         READY(1, "모집 예정"),
         RECRUITING(2, "모집중"),
-        COMPLETED(3, "모집완료");
+        COMPLETED(3, "모집 완료"),
+        CLOSED(4, "모집 마감");
 
         int stepNumber;
         String postsDescription;
-
         public String getPostsDescription() {
             return postsDescription;
         }
@@ -79,7 +81,6 @@ public class Posts extends Auditable {
             this.postsDescription = postsDescription;
         }
     }
-
 
     // 비즈니스 로직
     public void setMember(Member member) {
@@ -111,11 +112,24 @@ public class Posts extends Auditable {
         return this.participants.size() == totalCount || this.participants.size() > totalCount || this.postsStatus == PostsStatus.COMPLETED;
     }
 
-    public void checkStatus() {
+    public boolean isClosed() {
+        return this.postsStatus == PostsStatus.CLOSED || this.closeDate.isBefore(LocalDate.now());
+    }
+
+    public void changeStatus() {
         if (this.participants.size() == this.totalCount) {
             this.postsStatus = PostsStatus.COMPLETED;
         } else {
             this.postsStatus = PostsStatus.RECRUITING;
+        }
+    }
+
+    public void checkStatus() {
+        if (isFull()) {
+            throw new BusinessLogicException(ExceptionCode.GROUP_IS_FULL);
+        }
+        if (isClosed()) {
+            throw new BusinessLogicException(ExceptionCode.CLOSED_RECRUITING);
         }
     }
 }

@@ -19,6 +19,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -43,6 +44,7 @@ public class BatchConfig {
                 .next(deleteInactivePosts())
                 .next(deleteWithdrawalMember())
                 .next(deleteClosedMatching())
+                .next(closeExpiredPosts())
                 .build();
     }
 
@@ -105,6 +107,16 @@ public class BatchConfig {
                     return RepeatStatus.FINISHED;
                 })
                 .build();
+    }
+
+    @Bean
+    public Step closeExpiredPosts() {
+        return stepBuilderFactory.get("closeExpiredPosts")
+                .tasklet(((contribution, chunkContext) -> {
+                    LocalDate now = LocalDate.now();
+                    postsRepository.closeExpiredPosts(now);
+                    return RepeatStatus.FINISHED;
+                })).build();
     }
 
 

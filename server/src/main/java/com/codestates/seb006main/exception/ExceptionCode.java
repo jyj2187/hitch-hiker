@@ -5,6 +5,7 @@ import lombok.Getter;
 public enum ExceptionCode {
     MEMBER_EXISTS(409, "Member exists", "이미 존재하는 회원입니다."),
     GROUP_IS_FULL(409, "Group is full", "해당 그룹은 이미 가득 찼습니다."),
+    CLOSED_RECRUITING(409, "Already closed recruiting", "이미 완료 및 마감된 모집입니다."),
     MEMBER_NOT_FOUND(404, "Member not found", "존재하지 않는 회원입니다."),
     POST_NOT_FOUND(404, "Post not found", "존재하지 않는 게시글입니다."),
     PARTICIPANT_NOT_FOUND(404, "Participant not found", "존재하지 않는 참여 인원입니다."),

@@ -11,12 +11,14 @@ import { Editor, Viewer } from "@toast-ui/react-editor";
 const PostDetail = () => {
 	const navigate = useNavigate();
 	const { id } = useParams();
+	const memberId = sessionStorage.getItem("memberId");
 
 	const [detail, setDetail] = useState([]);
 	const [matchList, setMatchList] = useState([]);
 	const [matchBody, setMatchBody] = useState("");
 	const [isbookmark, setIsBookmark] = useState(false);
 	const [mybookmark, setMyBookmark] = useState([]);
+	const [disabled, setDisabled] = useState(false);
 
 	useEffect(() => {
 		axios(`${process.env.REACT_APP_URL}/api/posts/${id}`, {
@@ -26,6 +28,14 @@ const PostDetail = () => {
 		})
 			.then((res) => {
 				setDetail(res.data);
+				if (
+					res.data.postsStatus === "모집 마감" ||
+					res.data.postsStatus === "모집 완료"
+				) {
+					setDisabled(true);
+				} else {
+					setDisabled(false);
+				}
 			})
 			.catch((err) => {
 				if (err.response.status === 400) {
@@ -464,7 +474,8 @@ const PostDetail = () => {
 		<PageContainer>
 			<ContainerWrap>
 				<div className="titleWrapper">
-					<span>{detail.title}</span>
+					<span className="title">{detail.title}</span>
+					<span className="postsStatus">{detail.postsStatus}</span>
 					<button
 						className="heart"
 						onClick={() => {
@@ -472,7 +483,7 @@ const PostDetail = () => {
 						}}>
 						{isbookmark ? "❤️" : "🤍"}
 					</button>
-					{sessionStorage.getItem("userName") === detail.leaderName ? (
+					{memberId === String(detail.leaderId) ? (
 						<div className="postButton">
 							<button
 								onClick={() => {
@@ -530,10 +541,8 @@ const PostDetail = () => {
 										<span>
 											<div>
 												닉네임 : {el.displayName}
-												{sessionStorage.getItem("userName") ===
-													detail.leaderName &&
-												sessionStorage.getItem("userName") !==
-													el.displayName ? (
+												{memberId === String(detail.leaderId) &&
+												memberId !== String(el.memberId) ? (
 													<button
 														onClick={() => {
 															kickParticipant(el.memberPostId);
@@ -541,10 +550,8 @@ const PostDetail = () => {
 														여행 추방
 													</button>
 												) : null}
-												{sessionStorage.getItem("userName") !==
-													detail.leaderName &&
-												sessionStorage.getItem("userName") ===
-													el.displayName ? (
+												{memberId === String(detail.leaderId) &&
+												memberId !== String(el.memberId) ? (
 													<button
 														onClick={() => {
 															kickParticipant(el.memberPostId);
@@ -559,15 +566,19 @@ const PostDetail = () => {
 								))}
 						</div>
 						<div className="application">
-							{sessionStorage.getItem("userName") ===
-							detail.leaderName ? null : (
+							{memberId !== String(detail.leaderId) ? (
 								<Matchtext>
 									<p>매칭 신청하기</p>
 									<textarea
-										placeholder="10글자 이상 작성해주세요."
+										placeholder={
+											disabled
+												? "이미 완료 / 마감된 모집입니다."
+												: "10글자 이상 작성해주세요."
+										}
 										onChange={(e) => {
 											setMatchBody(e.target.value);
-										}}></textarea>
+										}}
+										disabled={disabled}></textarea>
 									<button
 										onClick={() => {
 											matchSubmitHandler();
@@ -575,7 +586,7 @@ const PostDetail = () => {
 										매칭 신청
 									</button>
 								</Matchtext>
-							)}
+							) : null}
 						</div>
 						<div className="applicants">
 							<p>매칭 신청자 명단</p>
@@ -584,8 +595,7 @@ const PostDetail = () => {
 									<span>신청자 :</span>
 									<span className="hostname"> {el.memberName} </span>
 									<span className="isread">
-										{sessionStorage.getItem("userName") ===
-										detail.leaderName ? (
+										{memberId === String(detail.leaderId) ? (
 											<div>
 												<button
 													className="matching"
@@ -598,7 +608,7 @@ const PostDetail = () => {
 												</button>
 											</div>
 										) : null}
-										{sessionStorage.getItem("userName") === el.memberName ? (
+										{memberId === String(el.memberId) ? (
 											<div>
 												<button
 													onClick={() => {
@@ -610,7 +620,7 @@ const PostDetail = () => {
 													onClick={() => {
 														chatHandler();
 													}}>
-													대화하기
+													작성자와 대화하기
 												</button>
 											</div>
 										) : null}
@@ -642,7 +652,7 @@ const PageContainer = styled.div`
 
 const ContainerWrap = styled.div`
 	box-sizing: border-box;
-	margin: 3rem auto;
+	margin: 1rem auto;
 	padding: 1rem;
 	width: 87.72% !important;
 	max-width: 1080px;
@@ -654,11 +664,19 @@ const ContainerWrap = styled.div`
 	.titleWrapper {
 		display: flex;
 		align-items: center;
+		gap: 0.5rem;
 
-		span {
+		.title {
 			font-size: 2rem;
 			font-weight: 500;
 			color: #444;
+		}
+
+		.postsStatus {
+			padding: 0.25rem;
+			font-size: 1.25rem;
+			font-weight: 300;
+			color: rgba(0, 0, 138, 0.7);
 		}
 
 		.heart {
@@ -739,10 +757,11 @@ const FlexContainer = styled.div`
 		color: darkblue;
 		font-weight: 600;
 		font-size: 1.125rem;
+		text-align: center;
 	}
 
 	.flexbody {
-		background: rgba(171, 217, 255, 0.3);
+		// background: rgba(171, 217, 255, 0.3);
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -800,8 +819,10 @@ const MatchingContainer = styled.div`
 
 const Match = styled.div`
 	display: flex;
-	background: rgba(171, 217, 255, 0.3);
+	// background: rgba(171, 217, 255, 0.3);
 	margin: 0.5rem auto;
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 
 	.hostname {
 		font-size: 1.2rem;
