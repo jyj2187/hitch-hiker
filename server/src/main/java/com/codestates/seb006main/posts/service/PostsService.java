@@ -154,7 +154,7 @@ public class PostsService {
 
         posts.deleteParticipant(memberPosts);
         memberPostsRepository.deleteById(participantId);
-        posts.checkStatus();
+        posts.changeStatus();
         postsRepository.save(posts);
     }
 
