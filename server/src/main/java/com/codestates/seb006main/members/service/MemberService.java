@@ -55,6 +55,8 @@ public class MemberService {
     private String S3Bucket;
     @Value("${cloud.aws.s3.default-image}")
     private String defaultImage;
+    @Value("${cloud.aws.s3.alter-domain}")
+    private String domain;
     private final BookmarkRepository bookmarkRepository;
     private final PostsRepository postsRepository;
     private final BlockRepository blockRepository;
@@ -86,7 +88,7 @@ public class MemberService {
             imageRepository.save(image);
             if (!findMember.getProfileImage().isBlank()) {
                 String beforePath = findMember.getProfileImage();
-                if (!beforePath.equals(defaultImage)) {
+                if (!beforePath.equals(defaultImage) && beforePath.startsWith("https://" + domain)) {
                     amazonS3Client.deleteObject(S3Bucket, beforePath.substring(beforePath.lastIndexOf("/") + 1));
                     Image beforeImage = imageRepository.findByStoredPath(beforePath).orElseThrow(() -> new BusinessLogicException(ExceptionCode.IMAGE_NOT_FOUND));
                     imageRepository.delete(beforeImage);

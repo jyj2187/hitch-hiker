@@ -41,9 +41,9 @@ const Posts = () => {
 			})
 			.catch((err) => {
 				ErrorHandler(err);
-				// dispatch(searchActions.setSearchText(""));
-				// dispatch(searchActions.setStartDate(""));
-				// dispatch(searchActions.setEndDate(""));
+				dispatch(searchActions.setSearchText(""));
+				dispatch(searchActions.setStartDate(""));
+				dispatch(searchActions.setEndDate(""));
 				window.location.reload();
 			});
 	}, [page, size, searchText, startDate, endDate, sort]);
@@ -145,11 +145,6 @@ const StyledPost = styled.div`
 		width: 87.72%;
 	}
 
-	// .wrapper {
-	// 	background-color: white;
-	// 	border-radius: 10px;
-	// 	box-shadow: 0px 3px 10px 1px rgba(0, 0, 0, 0.3);
-	// }
 	ul {
 		list-style: none;
 		padding: 0;
@@ -201,7 +196,7 @@ const StyledPost = styled.div`
 	}
 	.filterbtn {
 		flex-grow: 1/0;
-		border-radius: 8px;
+		border-radius: 2rem;
 		margin: 5px;
 	}
 	.focusbtn {
