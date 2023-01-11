@@ -85,7 +85,7 @@ public class PostsService {
 
     public MultiResponseDto readAllMatching(Long postId, PageRequest pageRequest) {
         Posts posts = postsRepository.findActiveById(postId).orElseThrow(() -> new BusinessLogicException(ExceptionCode.POST_NOT_FOUND));
-        List<Matching> matchingList = posts.getMatching().stream().filter(matching -> matching.getMatchingStatus() == Matching.MatchingStatus.READ || matching.getMatchingStatus() == Matching.MatchingStatus.NOT_READ).collect(Collectors.toList());
+        List<Matching> matchingList = posts.getMatching();
         Page<Matching> matchingPage = new PageImpl<>(matchingList, pageRequest, matchingList.size());
         return new MultiResponseDto<>(matchingMapper.matchingListToResponseDtoList(matchingList), matchingPage);
     }

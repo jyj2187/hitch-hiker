@@ -1,6 +1,7 @@
 package com.codestates.seb006main.posts.dto;
 
 import com.codestates.seb006main.Image.entity.Image;
+import com.codestates.seb006main.matching.dto.MatchingDto;
 import com.codestates.seb006main.members.dto.MemberDto;
 import com.codestates.seb006main.members.entity.Member;
 import com.codestates.seb006main.posts.entity.Posts;
@@ -103,15 +104,16 @@ public class PostsDto {
         private String location;
         private String thumbnail;
         private Integer totalCount;
-        private List<MemberDto.Participants> participants;
+//        private List<MemberDto.Participants> participants;
         private Integer participantsCount;
+        private Integer matchingCount;
         private LocalDate closeDate;
         private String postsStatus;
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
 
         @Builder
-        public Response(Long postId, String title, String body, Member member, Period travelPeriod, String location, List<Image> images, Integer totalCount, List<MemberDto.Participants> participants, LocalDate closeDate, Posts.PostsStatus postsStatus, LocalDateTime createdAt, LocalDateTime modifiedAt) {
+        public Response(Long postId, String title, String body, Member member, Period travelPeriod, String location, List<Image> images, Integer totalCount, List<MemberDto.Participants> participants, List<MatchingDto.Response> matching, LocalDate closeDate, Posts.PostsStatus postsStatus, LocalDateTime createdAt, LocalDateTime modifiedAt) {
             this.postId = postId;
             this.title = title;
             this.body = body;
@@ -122,8 +124,9 @@ public class PostsDto {
             this.location = location;
             this.thumbnail = images.isEmpty() ? null : images.get(0).getStoredPath();
             this.totalCount = totalCount;
-            this.participants = participants;
+//            this.participants = participants;
             this.participantsCount = participants.size();
+            this.matchingCount = matching.size();
             this.closeDate = closeDate;
             this.postsStatus = postsStatus.getPostsDescription();
             this.createdAt = createdAt;

@@ -4,25 +4,23 @@ import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { ErrorHandler } from "../../util/ErrorHandler";
 
-const Matching = () => {
-	const { matchid } = useParams();
-	const [matchData, setMatchData] = useState([]);
+const Matching = ({ matchingId, setMatchingData, matchingData }) => {
 	const navigate = useNavigate();
 
 	// 매칭 데이터 가져오기
 	useEffect(() => {
-		axios(`${process.env.REACT_APP_URL}/api/matching/${matchid}`, {
+		axios(`${process.env.REACT_APP_URL}/api/matching/${matchingId}`, {
 			headers: {
 				access_hh: sessionStorage.getItem("AccessToken"),
 			},
 		})
 			.then((res) => {
-				setMatchData(res.data);
+				setMatchingData(res.data);
 			})
 			.catch((err) => {
 				ErrorHandler(err);
 			});
-	}, [matchid]);
+	}, [matchingId]);
 
 	// 채팅 요청 핸들러
 	const askChatHandler = () => {
@@ -32,12 +30,10 @@ const Matching = () => {
 			},
 			method: "POST",
 			data: {
-				otherId: matchData.memberId,
+				otherId: matchingData.memberId,
 			},
 		}).then(() => {
-			alert(
-				"대화 요청을 전송하였습니다. 대화방에 입장하려면 대화하기 버튼을 눌러주세요."
-			);
+			alert("대화 요청을 전송하였습니다.");
 			// window.location.reload();
 		});
 	};
@@ -46,7 +42,7 @@ const Matching = () => {
 	// 채팅방이 존재하면 채팅하기
 	const goChatHandler = () => {
 		axios(
-			`${process.env.REACT_APP_URL}/api/chat/rooms/check?checkName=${matchData.memberName}`,
+			`${process.env.REACT_APP_URL}/api/chat/rooms/check?checkMemberId=${matchingData.memberId}`,
 			{
 				headers: {
 					access_hh: sessionStorage.getItem("AccessToken"),
@@ -64,13 +60,13 @@ const Matching = () => {
 	};
 
 	const acceptHandler = () => {
-		axios(`${process.env.REACT_APP_URL}/api/matching/${matchid}/accept`, {
+		axios(`${process.env.REACT_APP_URL}/api/matching/${matchingId}/accept`, {
 			headers: {
 				access_hh: sessionStorage.getItem("AccessToken"),
 			},
 		})
 			.then(() => {
-				navigate(`/post/${matchData.postId}`);
+				window.location.reload();
 			})
 			.catch((err) => {
 				ErrorHandler(err);
@@ -79,13 +75,13 @@ const Matching = () => {
 	};
 
 	const refuseHandler = () => {
-		axios(`${process.env.REACT_APP_URL}/api/matching/${matchid}/refuse`, {
+		axios(`${process.env.REACT_APP_URL}/api/matching/${matchingId}/refuse`, {
 			headers: {
 				access_hh: sessionStorage.getItem("AccessToken"),
 			},
 		})
 			.then(() => {
-				navigate(`/post/${matchData.postId}`);
+				window.location.reload();
 			})
 			.catch((err) => {
 				ErrorHandler(err);
@@ -94,79 +90,56 @@ const Matching = () => {
 	};
 
 	return (
-		<PageContainer>
-			<Container>
-				<ContentWrap>
-					<p>매칭 게시글 :</p>
-					<h1 className="title"> {matchData.postTitle}</h1>
-					<p>매칭 신청자 : </p>
-					<div className="person">{matchData.memberName}</div>
-					<p>매칭 내용 :</p>
-					<div className="contents"></div>
-					<MatchBody>{matchData.body}</MatchBody>
-					<span>
-						<Button
-							onClick={() => {
-								acceptHandler();
-							}}>
-							수락
-						</Button>
-						<Button
-							onClick={() => {
-								refuseHandler();
-							}}>
-							거절
-						</Button>
-						<Button
-							onClick={() => {
-								askChatHandler();
-							}}>
-							대화요청
-						</Button>
-						<Button
-							onClick={() => {
-								goChatHandler();
-							}}>
-							대화하기
-						</Button>
-					</span>
-				</ContentWrap>
-			</Container>
-		</PageContainer>
+		<MatchingContainer>
+			<ContentWrap>
+				<p>매칭 게시글 :</p>
+				<h1 className="title"> {matchingData.postTitle}</h1>
+				<p>매칭 신청자 : </p>
+				<div className="person">{matchingData.memberName}</div>
+				<p>매칭 내용 :</p>
+				<div className="contents"></div>
+				<MatchBody>{matchingData.body}</MatchBody>
+				<span>
+					<Button
+						onClick={() => {
+							acceptHandler();
+						}}>
+						수락
+					</Button>
+					<Button
+						onClick={() => {
+							refuseHandler();
+						}}>
+						거절
+					</Button>
+					<Button
+						onClick={() => {
+							askChatHandler();
+						}}>
+						대화요청
+					</Button>
+					<Button
+						onClick={() => {
+							goChatHandler();
+						}}>
+						대화하기
+					</Button>
+				</span>
+			</ContentWrap>
+		</MatchingContainer>
 	);
 };
 
 export default Matching;
-const PageContainer = styled.div`
-	width: 100%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 0 5px 0 5px;
-
-	@media screen and (max-width: 1000px) {
-		padding: 30px 25px 30px 25px;
-		height: 700px;
-	}
-`;
-const Container = styled.div`
-	margin: 150px 0 250px 0;
-	padding: 40px 50px 40px 50px;
+const MatchingContainer = styled.div`
 	display: flex;
 	flex-direction: column;
-	max-width: 800px;
 	width: 100%;
-	height: 900px;
 	background-color: #f5f5dc;
-
 	box-shadow: 0px 0px 11px rgba(0, 0, 0, 0.1);
 	border-radius: 8px;
 	font-family: Roboto;
 	box-sizing: border-box;
-	@media screen and (max-width: 1000px) {
-		padding: 30px 25px 30px 25px;
-		height: 455px;
-	}
 `;
 const ContentWrap = styled.div`
 	p {

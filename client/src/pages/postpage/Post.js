@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styled, { css } from "styled-components";
 import { ErrorHandler } from "../../util/ErrorHandler";
 const Post = ({ post }) => {
@@ -42,48 +42,42 @@ const Post = ({ post }) => {
 		});
 	};
 
-	const handleOnClick = (e) => {
-		if (e.button === 0) {
-			navigate(`/post/${post.postId}`);
-		} else if (e.button === 1) {
-			window.open(`/post/${post.postId}`, "_blank");
-		}
-	};
-
 	return (
 		<PostStyle isClosed={post.postsStatus === "모집 마감"}>
-			<div className="postBox" onMouseUp={(e) => handleOnClick(e)}>
-				{/* 썸네일 영역 */}
-				<div className="thumbnail">
-					<img
-						src={post.thumbnail ? post.thumbnail : defaultImage}
-						alt=""></img>
+			<Link className="link" to={`/post/${post.postId}`}>
+				<div className="postBox">
+					{/* 썸네일 영역 */}
+					<div className="thumbnail">
+						<img
+							src={post.thumbnail ? post.thumbnail : defaultImage}
+							alt=""></img>
+					</div>
+
+					{/* 글 및 내용 요약 영역 */}
+					<div className="postContent">
+						<p className="postTitle">{post.title}</p>
+						<p className="postBody">{post.body}</p>
+						<p className="participants">
+							모집 인원 {post.participantsCount} / {post.totalCount} |
+							<span className="closeDate">{post.closeDate} 까지</span>
+							<span className="status"> {post.postsStatus} </span>
+						</p>
+					</div>
 				</div>
 
-				{/* 글 및 내용 요약 영역 */}
-				<div className="postContent">
-					<p className="postTitle">{post.title}</p>
-					<p className="postBody">{post.body}</p>
-					<p className="participants">
-						모집 인원 {post.participantsCount} / {post.totalCount} |
-						<span className="closeDate">{post.closeDate} 까지</span>
-						<span className="status"> {post.postsStatus} </span>
-					</p>
+				{/* 게시글 액션 영역 */}
+				<div className="postInfo">
+					<span className="location">[{post.location}]</span>
+					<span className="leader">{post.leaderName}</span>
+					<button
+						className="bookmark"
+						onClick={() => {
+							bookmarkHandler();
+						}}>
+						{isbookmark ? "❤️" : "🤍"}
+					</button>
 				</div>
-			</div>
-
-			{/* 게시글 액션 영역 */}
-			<div className="postInfo">
-				<span className="location">[{post.location}]</span>
-				<span className="leader">{post.leaderName}</span>
-				<button
-					className="bookmark"
-					onClick={() => {
-						bookmarkHandler();
-					}}>
-					{isbookmark ? "❤️" : "🤍"}
-				</button>
-			</div>
+			</Link>
 		</PostStyle>
 	);
 };
@@ -100,6 +94,11 @@ const PostStyle = styled.div`
 		css`
 			filter: grayscale(100%);
 		`}
+
+	.link {
+		text-decoration: inherit;
+		color: inherit;
+	}
 
 	.postBox {
 		cursor: pointer;

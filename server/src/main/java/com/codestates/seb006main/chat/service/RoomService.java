@@ -134,13 +134,13 @@ public class RoomService {
         return new MultiResponseDto(roomMapper.roomListToResponseList(roomList) ,roomPage);
     }
 
-    public RoomDto.Response checkRoom(String checkName, Authentication authentication) {
+    public RoomDto.Response checkRoom(Long checkMemberId, Authentication authentication) {
         PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
         Long memberId = principalDetails.getMember().getMemberId();
 
-        Long checkMemberId = memberRepository.findByDisplayName(checkName)
-                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND))
-                .getMemberId();
+//        Long checkMemberId = memberRepository.findByDisplayName(checkName)
+//                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND))
+//                .getMemberId();
 
         Room room = roomRepository.findByBothId(memberId, checkMemberId)
                 .orElseGet(() -> roomRepository.findByBothId(checkMemberId, memberId)

@@ -1,27 +1,50 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import styled from "styled-components";
+import { useNavigate, useParams } from "react-router-dom";
+import styled, { css } from "styled-components";
 
 // Toast-UI Viewer 임포트
 import "@toast-ui/editor/dist/toastui-editor-viewer.css";
 import { Editor, Viewer } from "@toast-ui/react-editor";
 import { ErrorHandler } from "../../util/ErrorHandler";
+import MatchingList from "./MatchingList";
+import ParticipantsList from "./ParticipantsList";
 
 const PostDetail = () => {
 	const navigate = useNavigate();
 	const { id } = useParams();
 	const memberId = sessionStorage.getItem("memberId");
 
-	const [detail, setDetail] = useState([]);
-	const [matchList, setMatchList] = useState([]);
+	const [detail, setDetail] = useState({});
+	const [matching, setMatching] = useState([]);
+	const [participants, setParticipants] = useState([]);
 	const [matchBody, setMatchBody] = useState("");
 	const [isbookmark, setIsBookmark] = useState(false);
 	const [mybookmark, setMyBookmark] = useState([]);
 	const [disabled, setDisabled] = useState(false);
+	const [matchingOpen, setMatchingOpen] = useState(false);
+	const [participantsOpen, setParticipantsOpen] = useState(false);
+
+	const openMatchingModal = () => {
+		setMatchingOpen(true);
+	};
+
+	const closeMatchingModal = () => {
+		setMatchingOpen(false);
+	};
+
+	const openParticipantsModal = () => {
+		setParticipantsOpen(true);
+	};
+
+	const closeParticipantsModal = () => {
+		setParticipantsOpen(false);
+	};
 
 	useEffect(() => {
+		setMatching([]);
+		setParticipants([]);
+		setDetail({});
 		axios(`${process.env.REACT_APP_URL}/api/posts/${id}`, {
 			headers: {
 				access_hh: sessionStorage.getItem("AccessToken"),
@@ -43,18 +66,6 @@ const PostDetail = () => {
 				setTimeout(300);
 				navigate(-1);
 			});
-
-		axios(`${process.env.REACT_APP_URL}/api/posts/${id}/matching`, {
-			headers: {
-				access_hh: sessionStorage.getItem("AccessToken"),
-			},
-		})
-			.then((res) => {
-				setMatchList(res.data.data);
-			})
-			.catch((err) => {
-				ErrorHandler(err);
-			});
 	}, [id]);
 
 	useEffect(() => {
@@ -68,7 +79,6 @@ const PostDetail = () => {
 			})
 			.catch((err) => {
 				ErrorHandler(err);
-				window.location.reload();
 			});
 	}, [isbookmark]);
 
@@ -78,9 +88,37 @@ const PostDetail = () => {
 		setIsBookmark(bookmarked);
 	}, [mybookmark, detail.postId]);
 
+	const loadParticipants = () => {
+		axios(`${process.env.REACT_APP_URL}/api/posts/${id}/participants`, {
+			headers: {
+				access_hh: sessionStorage.getItem("AccessToken"),
+			},
+		})
+			.then((res) => {
+				setParticipants(res.data.data);
+			})
+			.catch((err) => {
+				ErrorHandler(err);
+			});
+	};
+
+	const loadMatching = () => {
+		axios(`${process.env.REACT_APP_URL}/api/posts/${id}/matching`, {
+			headers: {
+				access_hh: sessionStorage.getItem("AccessToken"),
+			},
+		})
+			.then((res) => {
+				setMatching(res.data.data);
+			})
+			.catch((err) => {
+				ErrorHandler(err);
+			});
+	};
+
 	const chatHandler = () => {
 		axios(
-			`${process.env.REACT_APP_URL}/api/chat/rooms/check?checkName=${detail.leaderName}`,
+			`${process.env.REACT_APP_URL}/api/chat/rooms/check?checkMemberId=${detail.leaderId}`,
 			{
 				headers: {
 					access_hh: sessionStorage.getItem("AccessToken"),
@@ -90,11 +128,26 @@ const PostDetail = () => {
 			.then((res) => {
 				if (res.data.roomId) {
 					navigate(`/chat/${res.data.roomId}`);
+					return;
 				}
 			})
 			.catch((err) => {
 				ErrorHandler(err);
 			});
+
+		axios(`${process.env.REACT_APP_URL}/api/chat/rooms`, {
+			headers: {
+				access_hh: sessionStorage.getItem("AccessToken"),
+			},
+			method: "POST",
+			data: {
+				otherId: detail.leaderId,
+			},
+		}).then((res) => {
+			alert("대화 요청을 전송하였습니다. 대화방으로 이동합니다.");
+			navigate(`/chat/${res.data.roomId}`);
+			// window.location.reload();
+		});
 	};
 
 	const bookmarkHandler = () => {
@@ -213,13 +266,132 @@ const PostDetail = () => {
 				<div id="author" className="author">
 					{" "}
 					{detail.leaderName}
+					{memberId !== String(detail.leaderId) ? (
+						<button onClick={chatHandler}>대화 요청</button>
+					) : null}
 				</div>
-				{/* TODO: 신청자 혹은 신청자가 아니어도 대화 요청할 수 있게 
-					그리고, 신청자의 대화하기 버튼은 삭제*/}
-				{/* {memberId !== String(detail.leaderId) ? (
-					<button>대화 요청</button>
-				) : null} */}
 				<Container>
+					<MatchingContainer>
+						<div className="participants">
+							<div className="listInfo">
+								<p>참여자 명단</p>
+								<span className="count">{detail.participantsCount} 명</span>
+							</div>
+							{participants.length > 0 ? (
+								<>
+									<div className="scrollList">
+										{participants.map((el, idx) => (
+											<Match key={idx}>
+												<span>
+													<div className="memberItem">
+														<img src={el.profileImage} alt={el.profileImage} />
+														<span className="memberName">
+															{" "}
+															{el.displayName}{" "}
+														</span>
+													</div>
+													<div>
+														{memberId === String(detail.leaderId) &&
+														memberId !== String(el.memberId) ? (
+															<button
+																onClick={() => {
+																	kickParticipant(el.memberPostId);
+																}}>
+																여행 추방
+															</button>
+														) : null}
+														{memberId === String(detail.leaderId) &&
+														memberId !== String(el.memberId) ? (
+															<button
+																onClick={() => {
+																	kickParticipant(el.memberPostId);
+																}}>
+																참여 취소
+															</button>
+														) : null}
+													</div>
+													{/* <div>자기소개 : {el.content}</div> */}
+												</span>
+											</Match>
+										))}
+									</div>
+									<button
+										className="manageButton"
+										onClick={openParticipantsModal}>
+										자세히 보기
+									</button>
+									{participantsOpen && (
+										<ParticipantsList
+											open={openParticipantsModal}
+											close={closeParticipantsModal}
+											participants={participants}
+											loadParticipants={loadParticipants}
+										/>
+									)}
+								</>
+							) : (
+								<button className="loadData" onClick={loadParticipants}>
+									보기
+								</button>
+							)}
+						</div>
+						<div className="applicants">
+							<div className="listInfo">
+								<p>매칭 신청자</p>
+								<span className="count">{detail.matchingCount} 명</span>
+							</div>
+							{matching.length > 0 ? (
+								<>
+									<div className="scrollList">
+										{matching.map((el, idx) => (
+											<Match key={idx}>
+												<div className="memberItem">
+													<img src={el.profileImage} alt={el.profileImage} />
+													<span className="memberName"> {el.memberName} </span>
+													<span className="matchingStatus">
+														{el.matchingStatus === "READ" && <span>읽음</span>}
+														{el.matchingStatus === "NOT_READ" && (
+															<span>읽지 않음</span>
+														)}
+														{el.matchingStatus === "REFUSED" && (
+															<span>거절</span>
+														)}
+														{el.matchingStatus === "ACCEPTED" && (
+															<span>수락</span>
+														)}
+													</span>
+												</div>
+											</Match>
+										))}
+									</div>
+									{memberId === String(detail.leaderId) && (
+										<>
+											<button
+												className="manageButton"
+												onClick={openMatchingModal}>
+												매칭관리
+											</button>
+											{matchingOpen && (
+												<MatchingList
+													open={openMatchingModal}
+													close={closeMatchingModal}
+													matchingList={matching}
+													loadMatching={loadMatching}
+												/>
+											)}
+										</>
+									)}
+								</>
+							) : (
+								memberId === String(detail.leaderId) &&
+								detail.matchingCount > 0 && (
+									<button className="loadData" onClick={loadMatching}>
+										보기
+									</button>
+								)
+							)}
+						</div>
+					</MatchingContainer>
 					<ContentContainer>
 						<FlexContainer>
 							<span className="flexbody">
@@ -244,108 +416,33 @@ const PostDetail = () => {
 							</span>
 						</FlexContainer>
 						<BodyContainer>
-							<ReactMarkdown className="viewer">{detail.body}</ReactMarkdown>
+							{/* <ReactMarkdown className="viewer">{detail.body}</ReactMarkdown> */}
+							{detail.body && <Viewer initialValue={detail.body} />}
 						</BodyContainer>
 					</ContentContainer>
-					<MatchingContainer>
-						<div className="participants">
-							<p>참여자 명단</p>
-							{detail.participants &&
-								detail.participants.map((el, idx) => (
-									<Match key={idx}>
-										<span>
-											<div>
-												닉네임 : {el.displayName}
-												{memberId === String(detail.leaderId) &&
-												memberId !== String(el.memberId) ? (
-													<button
-														onClick={() => {
-															kickParticipant(el.memberPostId);
-														}}>
-														여행 추방
-													</button>
-												) : null}
-												{memberId === String(detail.leaderId) &&
-												memberId !== String(el.memberId) ? (
-													<button
-														onClick={() => {
-															kickParticipant(el.memberPostId);
-														}}>
-														참여 취소
-													</button>
-												) : null}
-											</div>
-											<div>자기소개 : {el.content}</div>
-										</span>
-									</Match>
-								))}
-						</div>
-						<div className="application">
-							{memberId !== String(detail.leaderId) ? (
-								<Matchtext>
-									<p>매칭 신청하기</p>
-									<textarea
-										placeholder={
-											disabled
-												? "이미 완료 / 마감된 모집입니다."
-												: "10글자 이상 작성해주세요."
-										}
-										onChange={(e) => {
-											setMatchBody(e.target.value);
-										}}
-										disabled={disabled}></textarea>
-									<button
-										onClick={() => {
-											matchSubmitHandler();
-										}}>
-										매칭 신청
-									</button>
-								</Matchtext>
-							) : null}
-						</div>
-						<div className="applicants">
-							<p>매칭 신청자 명단</p>
-							{matchList.map((el, idx) => (
-								<Match key={idx}>
-									<span>신청자 :</span>
-									<span className="hostname"> {el.memberName} </span>
-									<span className="isread">
-										{memberId === String(detail.leaderId) ? (
-											<div>
-												<button
-													className="matching"
-													onClick={() => {
-														navigate(`/match/${el.matchingId}`, {
-															state: el,
-														});
-													}}>
-													매칭관리
-												</button>
-											</div>
-										) : null}
-										{memberId === String(el.memberId) ? (
-											<div>
-												<button
-													onClick={() => {
-														withdrawal(el.matchingId);
-													}}>
-													신청 취소
-												</button>
-												<button
-													onClick={() => {
-														chatHandler();
-													}}>
-													작성자와 대화하기
-												</button>
-											</div>
-										) : null}
-										{el.matchingStatus === "READ" ? <span>✅</span> : null}
-										{el.matchingStatus === "NOT_READ" ? <span>❌</span> : null}
-									</span>
-								</Match>
-							))}
-						</div>
-					</MatchingContainer>
+					<div className="application">
+						{memberId !== String(detail.leaderId) ? (
+							<Matchtext>
+								<p>매칭 신청하기</p>
+								<textarea
+									placeholder={
+										disabled
+											? "이미 완료 / 마감된 모집입니다."
+											: "10글자 이상 작성해주세요."
+									}
+									onChange={(e) => {
+										setMatchBody(e.target.value);
+									}}
+									disabled={disabled}></textarea>
+								<button
+									onClick={() => {
+										matchSubmitHandler();
+									}}>
+									매칭 신청
+								</button>
+							</Matchtext>
+						) : null}
+					</div>
 				</Container>
 			</ContainerWrap>
 		</PageContainer>
@@ -366,6 +463,7 @@ const PageContainer = styled.div`
 `;
 
 const ContainerWrap = styled.div`
+	overflow-y: auto;
 	box-sizing: border-box;
 	margin: 1rem auto;
 	padding: 1rem;
@@ -446,7 +544,7 @@ const ContainerWrap = styled.div`
 
 const Container = styled.div`
 	display: flex;
-	flex-wrap: wrap;
+	flex-direction: column;
 	justify-content: space-between;
 	height: 100%;
 	grid-gap: 0.5rem;
@@ -456,7 +554,6 @@ const Container = styled.div`
 const ContentContainer = styled.div`
 	flex: 2;
 	height: 100%;
-	max-width: calc((100% / 3) * 2) !important;
 `;
 
 const FlexContainer = styled.div`
@@ -478,7 +575,6 @@ const FlexContainer = styled.div`
 	}
 
 	.flexbody {
-		// background: rgba(171, 217, 255, 0.3);
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -497,76 +593,130 @@ const BodyContainer = styled.div`
 	width: 100%;
 	overflow-x: auto;
 
-	.viewer {
-		padding: 10px;
-		font-size: 1.125rem;
-		line-height: 150%;
+	.toastui-editor-contents {
+		padding: 0.625rem;
+		min-height: 25rem;
+	}
+
+	.toastui-editor-contents p {
+		font-size: 1rem;
+		line-height: 120%;
 	}
 `;
 
 const MatchingContainer = styled.div`
-	flex: 1;
 	display: flex;
 	flex-direction: column;
-	padding-left: 0.5rem;
-	border-left: 0.05rem solid rgba(0, 0, 0, 0.3);
-	min-height: 1024px;
 
 	p {
 		font-size: 1.25rem;
 		border-bottom: 0.025rem solid rgba(0, 0, 0, 0.3);
 		padding-bottom: 0.25rem;
+		margin-right: 0.5rem;
 	}
 
 	button {
 		margin-left: auto;
 	}
 
-	.participants {
-		// flex: 1 0 50%;
+	.loadData {
+		margin-left: 1rem;
 	}
 
-	.application {
-		// flex: 2 0 50%;
-		margin: 0.5rem 0;
+	.participants {
+		display: flex;
+		align-items: center;
+		height: 5rem;
 	}
 
 	.applicants {
-		// flex: 1 0 50%;
+		display: flex;
+		align-items: center;
+		height: 6rem;
+	}
+
+	.application {
+		margin: 0.5rem 0;
+	}
+
+	.listInfo {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+
+		.count {
+			padding-top: 0.5rem;
+			text-align: center;
+		}
+	}
+
+	.scrollList {
+		display: flex;
+		align-items: center;
+		overflow-x: auto;
 	}
 `;
 
 const Match = styled.div`
 	display: flex;
-	// background: rgba(171, 217, 255, 0.3);
-	margin: 0.5rem auto;
-	padding-bottom: 0.5rem;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+	margin: 0.5rem;
 
-	.hostname {
-		font-size: 1.2rem;
-	}
-
-	.matching {
-		padding: 1rem;
-		width: fit-content;
-	}
-
-	.isread {
-		margin-right: 10px;
-	}
 	button {
 		margin-left: 5px;
 		margin-right: 5px;
 	}
+
+	img {
+		width: 3rem;
+		height: 3rem;
+		border-radius: 50%;
+	}
+
+	.memberItem {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		width: 5rem;
+	}
+
+	.manageButton {
+		padding: 1rem;
+		width: fit-content;
+	}
+
+	.matchingStatus {
+		font-size: 0.875rem;
+		color: rgba(0, 0, 0, 0.5);
+	}
+
+	${(props) =>
+		props.status === "REFUSED" &&
+		css`
+			filter: grayscale(100%);
+		`}
+
+	${(props) =>
+		props.status === "ACCEPTED" &&
+		css`
+			img {
+				border: 1px solid green;
+			}
+
+			.matchingStatus {
+				color: green;
+			}
+		`}
 `;
 
 const Matchtext = styled.div`
 	display: flex;
 	flex-direction: column;
+	padding-top: 1rem;
+	border-top: 1px solid black;
 	textarea {
 		flex-grow: 1;
-		font-size: 17px;
+		font-size: 1rem;
 		height: 200px;
 		resize: none;
 		border: none;
