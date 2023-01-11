@@ -106,11 +106,17 @@ const Post = ({ post }) => {
 		});
 	};
 
+	const handleOnClick = (e) => {
+		if (e.button === 0) {
+			navigate(`/post/${post.postId}`);
+		} else if (e.button === 1) {
+			window.open(`/post/${post.postId}`, "_blank");
+		}
+	};
+
 	return (
 		<PostStyle isClosed={post.postsStatus === "모집 마감"}>
-			<div
-				className="postBox"
-				onClick={() => navigate(`/post/${post.postId}`, { state: post })}>
+			<div className="postBox" onMouseUp={(e) => handleOnClick(e)}>
 				{/* 썸네일 영역 */}
 				<div className="thumbnail">
 					<img
