@@ -7,6 +7,7 @@ import styled from "styled-components";
 // Toast-UI Viewer 임포트
 import "@toast-ui/editor/dist/toastui-editor-viewer.css";
 import { Editor, Viewer } from "@toast-ui/react-editor";
+import { ErrorHandler } from "../../util/ErrorHandler";
 
 const PostDetail = () => {
 	const navigate = useNavigate();
@@ -38,46 +39,9 @@ const PostDetail = () => {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						if (
-							err.response.data.korMessage === "존재하지 않는 게시글입니다."
-						) {
-							alert(err.response.data.korMessage);
-							navigate(`/main`);
-						}
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
-				window.location.reload();
+				ErrorHandler(err);
+				setTimeout(300);
+				navigate(-1);
 			});
 
 		axios(`${process.env.REACT_APP_URL}/api/posts/${id}/matching`, {
@@ -89,40 +53,7 @@ const PostDetail = () => {
 				setMatchList(res.data.data);
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
-				window.location.reload();
+				ErrorHandler(err);
 			});
 	}, [id]);
 
@@ -136,39 +67,7 @@ const PostDetail = () => {
 				setMyBookmark(res.data.postIds);
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 				window.location.reload();
 			});
 	}, [isbookmark]);
@@ -194,18 +93,7 @@ const PostDetail = () => {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status === 500) {
-					alert("서버 오류입니다. 다시 시도해주세요.");
-					return;
-				}
-				if (err.response.status !== 0) {
-					alert(err.response.data.korMessage);
-					return;
-				}
-				if (err) {
-					alert("잘못된 접근 방법입니다. 다시 시도해주세요.");
-					return;
-				}
+				ErrorHandler(err);
 			});
 	};
 
@@ -219,39 +107,7 @@ const PostDetail = () => {
 				},
 			}
 		).catch((err) => {
-			if (err.response.status === 400) {
-				if (err.response.data.fieldErrors) {
-					alert(err.response.data.fieldErrors[0].reason);
-				} else if (
-					err.response.data.fieldErrors === null &&
-					err.response.data.violationErrors
-				) {
-					alert(err.response.data.violationErrors[0].reason);
-				} else {
-					alert(
-						"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-					);
-				}
-			} else if (err.response.status === 0)
-				alert(
-					"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-				);
-			else {
-				if (
-					err.response.data.korMessage ===
-					"만료된 토큰입니다. 다시 로그인 해주세요."
-				) {
-					sessionStorage.clear();
-					navigate(`/`);
-					window.location.reload();
-				} else if (err.response.data.korMessage) {
-					alert(err.response.data.korMessage);
-				} else {
-					alert(
-						"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-					);
-				}
-			}
+			ErrorHandler(err);
 			window.location.reload();
 		});
 	};
@@ -271,45 +127,7 @@ const PostDetail = () => {
 				window.location.reload();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						if (
-							err.response.data.korMessage === "존재하지 않는 게시글입니다."
-						) {
-							alert(err.response.data.korMessage);
-							navigate(`/main`);
-						}
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 				window.location.reload();
 			});
 	};
@@ -326,45 +144,7 @@ const PostDetail = () => {
 				window.location.reload();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						if (
-							err.response.data.korMessage === "존재하지 않는 게시글입니다."
-						) {
-							alert(err.response.data.korMessage);
-							navigate(`/main`);
-						}
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 			});
 	};
 
@@ -379,39 +159,7 @@ const PostDetail = () => {
 				window.location.reload();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 				window.location.reload();
 			});
 	};
@@ -427,45 +175,7 @@ const PostDetail = () => {
 				window.location.reload();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						if (
-							err.response.data.korMessage === "존재하지 않는 게시글입니다."
-						) {
-							alert(err.response.data.korMessage);
-							navigate(`/main`);
-						}
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 				window.location.reload();
 			});
 	};

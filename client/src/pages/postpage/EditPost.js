@@ -12,12 +12,16 @@ import styled from "styled-components";
 import "tui-color-picker/dist/tui-color-picker.css";
 import "@toast-ui/editor-plugin-color-syntax/dist/toastui-editor-plugin-color-syntax.css";
 import colorSyntax from "@toast-ui/editor-plugin-color-syntax";
+import { ErrorHandler } from "../../util/ErrorHandler";
 
 const EditPost = () => {
 	const { id } = useParams();
 	const [editData, setEditData] = useState([]);
 	const [title, setTitle] = useState("");
-	const [mate, setMate] = useState();
+	const [startDate, setStartDate] = useState("");
+	const [endDate, setEndDate] = useState("");
+	const [location, setLocation] = useState("");
+	const [totalCount, setTotalCount] = useState("");
 	const [body, setBody] = useState("");
 	const [closeDate, setCloseDate] = useState("");
 	const editBody = useRef();
@@ -29,18 +33,27 @@ const EditPost = () => {
 	const month = today.getMonth() + 1;
 	const date = today.getDate();
 
+	console.log(totalCount);
+
 	useEffect(() => {
 		axios(`${process.env.REACT_APP_URL}/api/posts/${id}`, {
 			headers: {
 				access_hh: sessionStorage.getItem("AccessToken"),
 			},
-		}).then((res) => {
-			setEditData(res.data);
-			setTitle(res.data.title);
-			setMate(res.data.totalCount);
-			setBody(res.data.body);
-			setCloseDate(res.data.closeDate);
-		});
+		})
+			.then((res) => {
+				setEditData(res.data);
+				setTitle(res.data.title);
+				setStartDate(res.data.startDate);
+				setEndDate(res.data.endDate);
+				setLocation(res.data.location);
+				setTotalCount(res.data.totalCount);
+				setBody(res.data.body);
+				setCloseDate(res.data.closeDate);
+			})
+			.catch((err) => {
+				ErrorHandler(err);
+			});
 	}, [id]);
 
 	const submitEditDataHandler = () => {
@@ -53,7 +66,7 @@ const EditPost = () => {
 			data: {
 				title: title,
 				body: enteredBody,
-				totalCount: mate,
+				totalCount: totalCount,
 				closeDate: closeDate,
 				images: [],
 			},
@@ -66,177 +79,168 @@ const EditPost = () => {
 				window.location.reload();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 			});
 	};
 	return (
 		<PageContainer>
 			<ContainerWrap>
-				<div>
-					<span className="title">제목 :</span>
-					<input
-						id="title"
-						type="text"
-						required
-						defaultValue={title}
-						onChange={(e) => {
-							setTitle(e.target.value);
-						}}
-					/>
-				</div>
-				<div>
-					<span className="title">본인을 포함한 총 모집 인원 수 :</span>
-					<input
-						id="number"
-						type="number"
-						required
-						defaultValue={mate}
-						onChange={(e) => {
-							setMate(e.target.value);
-							if (e.target.value > 20) {
-								e.target.value = 20;
-								setMate(20);
-							}
-						}}
-					/>
-				</div>
-				<div>
-					<span className="title">모집 마감 :</span>
-					<input
-						id="end"
-						type="date"
-						required
-						defaultValue={closeDate}
-						onChange={(e) => {
-							setCloseDate(e.target.value);
-						}}
-						min={`${year}-${("0" + month).slice(-2)}-${date}`}
-					/>
-					<span className="title"> 까지</span>
-				</div>
-				{editData.body && (
-					<Editor
-						placeholder="내용을 입력해주세요."
-						required
-						ref={editBody}
-						previewStyle="vertical" // 미리보기 스타일 지정
-						height="300px" // 에디터 창 높이
-						initialValue={body}
-						initialEditType="markdown" // 초기 입력모드 설정(디폴트 markdown)
-						hideModeSwitch={true}
-						toolbarItems={[
-							// 툴바 옵션 설정
-							["heading", "bold", "italic", "strike"],
-							["hr", "quote"],
-							["ul", "ol", "task", "indent", "outdent"],
-							["table", "image", "link"],
-							["code", "codeblock"],
-						]}
-						hooks={{
-							addImageBlobHook: (blob, callback) => {
-								const formData = new FormData();
-								formData.append("image", blob);
-								axios(`${process.env.REACT_APP_URL}/api/images/upload`, {
-									method: "POST",
-									headers: {
-										"Content-Type": "multipart/form-data",
-										access_hh: sessionStorage.getItem("AccessToken"),
-									},
-									data: formData,
-								})
-									.then((res) => {
-										// 기홍님의 잔재.....
-										// let testid = res.data.imageId;
-										// setImageId(testid);
-										// mount.current = true;
-										callback(res.data.imageUrl);
-									})
-									.catch((err) => {
-										if (err.response.status === 400) {
-											if (err.response.data.fieldErrors) {
-												alert(err.response.data.fieldErrors[0].reason);
-											} else if (
-												err.response.data.fieldErrors === null &&
-												err.response.data.violationErrors
-											) {
-												alert(err.response.data.violationErrors[0].reason);
-											} else {
-												alert(
-													"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-												);
-											}
-										} else if (err.response.status === 0)
-											alert(
-												"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-											);
-										else {
-											if (
-												err.response.data.korMessage ===
-												"만료된 토큰입니다. 다시 로그인 해주세요."
-											) {
-												sessionStorage.clear();
-												navigate(`/`);
-												window.location.reload();
-											} else if (err.response.data.korMessage) {
-												alert(err.response.data.korMessage);
-											} else {
-												alert(
-													"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-												);
-											}
+				<form
+					id="editorForm"
+					onSubmit={(e) => {
+						submitEditDataHandler();
+						e.preventDefault();
+					}}>
+					<InputWrapper>
+						<input
+							id="title"
+							type="text"
+							required
+							defaultValue={title}
+							onChange={(e) => {
+								setTitle(e.target.value);
+							}}
+							placeholder="제목을 입력해주세요."
+						/>
+						<div className="location">
+							여행지
+							<input
+								id="location"
+								type="text"
+								required
+								defaultValue={location}
+								onChange={(e) => {
+									setLocation(e.target.value);
+								}}
+								readOnly
+							/>
+						</div>
+						<div className="tavelDate">
+							<span className="startDate">
+								여행 날짜
+								<input
+									className="date"
+									type="date"
+									required
+									defaultValue={startDate}
+									onChange={(e) => {
+										setStartDate(e.target.value);
+									}}
+									placeholder={`${year}-${("0" + month).slice(-2)}-${date}`}
+									min={`${year}-${("0" + month).slice(-2)}-${date}`}
+									readOnly
+								/>
+								부터
+							</span>
+							<span className="endDate">
+								<input
+									className="date"
+									type="date"
+									required
+									defaultValue={endDate}
+									onChange={(e) => {
+										setEndDate(e.target.value);
+									}}
+									placeholder={startDate}
+									min={startDate}
+									readOnly
+								/>
+								까지
+							</span>
+						</div>
+						<div className="recruitInfo">
+							<span className="closeDate">
+								모집 마감
+								<input
+									className="date"
+									type="date"
+									required
+									defaultValue={closeDate}
+									onChange={(e) => {
+										setCloseDate(e.target.value);
+									}}
+									placeholder={`${year}-${("0" + month).slice(-2)}-${date}`}
+									min={`${year}-${("0" + month).slice(-2)}-${date}`}
+									max={startDate}
+								/>
+								까지
+							</span>
+							<span className="count">
+								모집 인원(본인 포함)
+								<input
+									className="number"
+									type="number"
+									required
+									min="2"
+									max="20"
+									defaultValue={totalCount}
+									onChange={(e) => {
+										setTotalCount(e.target.value);
+
+										if (e.target.value > 20) {
+											e.target.value = 20;
+											setTotalCount(20);
 										}
-									});
-							},
-						}}
-						plugins={[colorSyntax]} // colorSyntax 플러그인 적용
-					></Editor>
-				)}
-				{sessionStorage.getItem("userName") === editData.leaderName ? (
+									}}
+									placeholder="최대 20명"
+								/>
+							</span>
+						</div>
+					</InputWrapper>
+					{editData.body && (
+						<Editor
+							placeholder="내용을 입력해주세요."
+							required
+							ref={editBody}
+							previewStyle="vertical" // 미리보기 스타일 지정
+							height="540px" // 에디터 창 높이
+							initialValue={body}
+							initialEditType="wysiwyg" // 초기 입력모드 설정(디폴트 markdown)
+							toolbarItems={[
+								// 툴바 옵션 설정
+								["heading", "bold", "italic", "strike"],
+								["hr", "quote"],
+								["ul", "ol", "task", "indent", "outdent"],
+								["table", "image", "link"],
+								["code", "codeblock"],
+							]}
+							hooks={{
+								addImageBlobHook: (blob, callback) => {
+									const formData = new FormData();
+									formData.append("image", blob);
+									axios(`${process.env.REACT_APP_URL}/api/images/upload`, {
+										method: "POST",
+										headers: {
+											"Content-Type": "multipart/form-data",
+											access_hh: sessionStorage.getItem("AccessToken"),
+										},
+										data: formData,
+									})
+										.then((res) => {
+											// 기홍님의 잔재.....
+											// let testid = res.data.imageId;
+											// setImageId(testid);
+											// mount.current = true;
+											callback(res.data.imageUrl);
+										})
+										.catch((err) => {
+											ErrorHandler(err);
+										});
+								},
+							}}
+							plugins={[colorSyntax]} // colorSyntax 플러그인 적용
+						></Editor>
+					)}
+					{sessionStorage.getItem("userName") === editData.leaderName ? (
+						<Button type="submit">수정 완료</Button>
+					) : null}
 					<Button
 						onClick={() => {
-							submitEditDataHandler();
+							navigate(`/post/${id}`);
 						}}>
-						수정 완료
+						취소
 					</Button>
-				) : null}
-				<Button
-					onClick={() => {
-						navigate(`/post/${id}`);
-					}}>
-					취소
-				</Button>
+				</form>
 			</ContainerWrap>
 		</PageContainer>
 	);
@@ -244,67 +248,59 @@ const EditPost = () => {
 
 export default EditPost;
 const PageContainer = styled.div`
-	label {
-		font-size: 1.5rem;
-		font-weight: 500;
-		color: #444;
-	}
-	position: absolute;
-
-	width: 1000px;
+	margin: 0 auto;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	padding: 0 5px 0 5px;
-
-	@media screen and (max-width: 500px) {
-		padding: 30px 25px 30px 25px;
-		height: 700px;
-	}
+	width: 87.72% !important;
+	max-width: 1080px;
+	height: fit-content;
+	min-height: 1024px;
 `;
+
 const ContainerWrap = styled.div`
-	#title {
-		font-size: 1.4rem;
-		padding: 1rem;
-		width: 50rem;
-		border-radius: 5px;
-	}
-	#number {
-		font-size: 1rem;
-		width: 5rem;
-		border-radius: 5px;
-	}
-	#end {
-		font-size: 1rem;
-		width: 10rem;
-		border-radius: 5px;
-	}
-	.title {
-		font-size: 20px;
-		padding: 20px;
-		margin-bottom: 20px;
-	}
-
-	.contents {
-		padding-left: 1rem;
-	}
-
-	margin-left: 500px;
-	margin-top: 10px;
-	padding: 40px 50px 40px 50px;
 	display: flex;
 	flex-direction: column;
-	max-width: 1650px;
-	width: 170%;
-	height: 900px;
-	background-color: beige;
 
-	box-shadow: 0px 0px 11px rgba(0, 0, 0, 0.1);
-	border-radius: 8px;
 	font-family: Roboto;
 	box-sizing: border-box;
-	@media screen and (max-width: 500px) {
-		padding: 30px 25px 30px 25px;
-		height: 455px;
+`;
+
+const InputWrapper = styled.div`
+	display: flex;
+	flex-direction: column;
+
+	#title {
+		width: 20rem;
+		font-size: 1.5rem;
+		margin: 0;
+		margin-right: 0.5rem;
+		margin-bottom: 0.5rem;
+
+		&:placeholder {
+			color: rgba(0, 0, 0, 0.5);
+		}
+	}
+
+	input {
+		margin: 0.5rem;
+		padding: 0.25rem;
+		display: inline-block;
+		border: none;
+		outline: none;
+		border-bottom: 1px solid black;
+
+		&:focus {
+			border-bottom: 2px solid black;
+			transition: all ease 0s 0s;
+		}
+	}
+
+	span {
+		margin: 0 1rem 0 0;
+	}
+
+	.number {
+		width: 5rem;
 	}
 `;
