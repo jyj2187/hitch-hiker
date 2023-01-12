@@ -1,56 +1,67 @@
 import React from "react";
+import { useEffect } from "react";
 import styled, { css } from "styled-components";
 import Participant from "./Participant";
 
-const ParticipantsList = ({ open, close, participants, loadParticipants }) => {
+const ParticipantsList = ({
+	open,
+	close,
+	participants,
+	loadParticipants,
+	post,
+}) => {
+	// 스크롤 방지
+	useEffect(() => {
+		document.body.style.cssText = `
+          position: fixed; 
+          top: -${window.scrollY}px;
+          overflow-y: scroll;
+          width: 100%;`;
+		return () => {
+			const scrollY = document.body.style.top;
+			document.body.style.cssText = "";
+			window.scrollTo(0, parseInt(scrollY || "0", 10) * -1);
+		};
+	}, []);
+
 	return (
-		<div className={open ? "openParticipantsModal modal" : "modal"}>
-			<ParticipantsListContainer>
-				{open ? (
-					<>
-						<button className="closeButton" onClick={close}>
-							닫기
-						</button>
-						{participants.map((el, idx) => (
-							<Participant key={idx} participant={el} />
-							// <Match key={idx}>
-							// 	<span>
-							// 		<div className="memberItem">
-							// 			<img src={el.profileImage} alt={el.profileImage} />
-							// 			<span className="memberName"> {el.displayName} </span>
-							// 		</div>
-							// 		<div>
-							// 			{/* {memberId === String(detail.leaderId) &&
-							// 			memberId !== String(el.memberId) ? (
-							// 				<button
-							// 					onClick={() => {
-							// 						kickParticipant(el.memberPostId);
-							// 					}}>
-							// 					여행 추방
-							// 				</button>
-							// 			) : null}
-							// 			{memberId === String(detail.leaderId) &&
-							// 			memberId !== String(el.memberId) ? (
-							// 				<button
-							// 					onClick={() => {
-							// 						kickParticipant(el.memberPostId);
-							// 					}}>
-							// 					참여 취소
-							// 				</button>
-							// 			) : null} */}
-							// 		</div>
-							// 		{/* <div>자기소개 : {el.content}</div> */}
-							// 	</span>
-							// </Match>
-						))}
-					</>
-				) : null}
-			</ParticipantsListContainer>
-		</div>
+		<Modal>
+			<div className={open ? "openParticipantsModal modal" : "modal"}>
+				<ParticipantsListContainer>
+					{open ? (
+						<>
+							<button className="closeButton" onClick={close}>
+								닫기
+							</button>
+							{participants.map((el, idx) => (
+								<Participant
+									key={idx}
+									participant={el}
+									loadParticipants={loadParticipants}
+									post={post}
+								/>
+							))}
+						</>
+					) : null}
+				</ParticipantsListContainer>
+			</div>
+		</Modal>
 	);
 };
 
 export default ParticipantsList;
+const Modal = styled.div`
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.4);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+`;
+
 const ParticipantsListContainer = styled.div`
 	width: 72% !important;
 	max-width: 960px;
@@ -62,7 +73,7 @@ const ParticipantsListContainer = styled.div`
 	z-index: 999;
 
 	position: absolute;
-	top: 27.5%;
+	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
 
@@ -73,47 +84,4 @@ const ParticipantsListContainer = styled.div`
 		margin-bottom: auto;
 		margin-left: auto;
 	}
-`;
-
-const Match = styled.div`
-	cursor: pointer;
-	display: flex;
-	margin: 0.5rem;
-
-	img {
-		width: 3rem;
-		height: 3rem;
-		border-radius: 50%;
-	}
-
-	.memberItem {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		text-align: center;
-		width: 5rem;
-	}
-
-	.matchingStatus {
-		font-size: 0.875rem;
-		color: rgba(0, 0, 0, 0.5);
-	}
-
-	${(props) =>
-		props.status === "REFUSED" &&
-		css`
-			filter: grayscale(100%);
-		`}
-
-	${(props) =>
-		props.status === "ACCEPTED" &&
-		css`
-			img {
-				border: 1px solid green;
-			}
-
-			.matchingStatus {
-				color: green;
-			}
-		`}
 `;

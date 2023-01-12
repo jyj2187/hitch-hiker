@@ -201,22 +201,6 @@ const PostDetail = () => {
 			});
 	};
 
-	const kickParticipant = (memberPostId) => {
-		axios(`${process.env.REACT_APP_URL}/api/participants/${memberPostId}`, {
-			method: "DELETE",
-			headers: {
-				access_hh: sessionStorage.getItem("AccessToken"),
-			},
-		})
-			.then(() => {
-				window.location.reload();
-			})
-			.catch((err) => {
-				ErrorHandler(err);
-				window.location.reload();
-			});
-	};
-
 	const withdrawal = (matchingId) => {
 		axios(`${process.env.REACT_APP_URL}/api/matching/${matchingId}`, {
 			method: "DELETE",
@@ -234,7 +218,7 @@ const PostDetail = () => {
 	};
 
 	return (
-		<PageContainer>
+		<PageContainer isModalOpen={participantsOpen || matchingOpen}>
 			<ContainerWrap>
 				<div className="titleWrapper">
 					<span className="title">{detail.title}</span>
@@ -285,32 +269,8 @@ const PostDetail = () => {
 												<span>
 													<div className="memberItem">
 														<img src={el.profileImage} alt={el.profileImage} />
-														<span className="memberName">
-															{" "}
-															{el.displayName}{" "}
-														</span>
+														<span className="memberName">{el.displayName}</span>
 													</div>
-													<div>
-														{memberId === String(detail.leaderId) &&
-														memberId !== String(el.memberId) ? (
-															<button
-																onClick={() => {
-																	kickParticipant(el.memberPostId);
-																}}>
-																여행 추방
-															</button>
-														) : null}
-														{memberId === String(detail.leaderId) &&
-														memberId !== String(el.memberId) ? (
-															<button
-																onClick={() => {
-																	kickParticipant(el.memberPostId);
-																}}>
-																참여 취소
-															</button>
-														) : null}
-													</div>
-													{/* <div>자기소개 : {el.content}</div> */}
 												</span>
 											</Match>
 										))}
@@ -326,6 +286,7 @@ const PostDetail = () => {
 											close={closeParticipantsModal}
 											participants={participants}
 											loadParticipants={loadParticipants}
+											post={detail}
 										/>
 									)}
 								</>
@@ -455,11 +416,6 @@ const PageContainer = styled.div`
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-
-	/* @media screen and (max-width: fit-content) {
-    padding: 30px 25px 30px 25px;
-    height: 700px;
-  } */
 `;
 
 const ContainerWrap = styled.div`

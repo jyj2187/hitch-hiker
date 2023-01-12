@@ -4,7 +4,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { ErrorHandler } from "../../util/ErrorHandler";
 
-const Matching = ({ matchingId, setMatchingData, matchingData }) => {
+const Matching = ({
+	matchingId,
+	setMatchingData,
+	matchingData,
+	loadMatching,
+}) => {
 	const navigate = useNavigate();
 
 	// 매칭 데이터 가져오기
@@ -16,6 +21,7 @@ const Matching = ({ matchingId, setMatchingData, matchingData }) => {
 		})
 			.then((res) => {
 				setMatchingData(res.data);
+				loadMatching();
 			})
 			.catch((err) => {
 				ErrorHandler(err);
@@ -66,7 +72,8 @@ const Matching = ({ matchingId, setMatchingData, matchingData }) => {
 			},
 		})
 			.then(() => {
-				window.location.reload();
+				alert("요청을 수락하였습니다.");
+				loadMatching();
 			})
 			.catch((err) => {
 				ErrorHandler(err);
@@ -81,7 +88,8 @@ const Matching = ({ matchingId, setMatchingData, matchingData }) => {
 			},
 		})
 			.then(() => {
-				window.location.reload();
+				alert("요청을 거절하였습니다.");
+				loadMatching();
 			})
 			.catch((err) => {
 				ErrorHandler(err);
