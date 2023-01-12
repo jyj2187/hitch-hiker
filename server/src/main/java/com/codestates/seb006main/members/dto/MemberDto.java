@@ -63,8 +63,6 @@ public class MemberDto {
         private Member.Role role;
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
-        // TODO: Member측에서 참여하고 있는 그룹을 보여줄까?
-//        private List<PostsDto.Group> groups;
 
         @Builder
         public Response(Long memberId, String email, String displayName, String phone, String content, Member.MemberStatus memberStatus, String profileImage, Member.Role role, LocalDateTime createdAt, LocalDateTime modifiedAt) {
@@ -115,7 +113,6 @@ public class MemberDto {
         private Member.Role role;
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
-
         private String access_HH;
         private String refresh_HH;
 

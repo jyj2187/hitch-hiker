@@ -1,8 +1,14 @@
-import { Navigate, useNavigate } from "react-router-dom";
-
 export const ErrorHandler = (err) => {
 	if (err.response.status === 500) {
 		alert("서버 오류입니다. 다시 시도해주세요.");
+		return;
+	}
+	if (err.response.status === 400) {
+		alert(
+			err.response.data.violationErrors
+				? err.response.data.violationErrors[0].reason
+				: err.response.data.fieldErrors[0].reason
+		);
 		return;
 	}
 	if (err.response.status !== 0) {

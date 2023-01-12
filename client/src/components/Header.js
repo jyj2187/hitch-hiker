@@ -328,6 +328,7 @@ const HeaderSection = styled.header`
 	display: grid;
 	place-items: center;
 	width: 100%;
+	border-bottom: 1px solid black;
 	position: absolute;
 	z-index: 1;
 
@@ -401,10 +402,8 @@ const HeaderSection = styled.header`
 	}
 
 	nav {
-		box-shadow: 0 1px 4px rgba(1, 1, 0, 0.4);
-		background: rgba(171, 217, 255, 0.1);
-		opacity: 90%;
-		width: 100%;
+		width: 87.72% !important;
+		max-width: 1080px;
 
 		.menuItems {
 			height: 4rem;
