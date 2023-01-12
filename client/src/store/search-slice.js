@@ -1,36 +1,27 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialSearchState = {
-	title: "",
-	body: "",
-	location: "",
+	searchText: "",
 	startDate: "",
 	endDate: "",
 };
 
-const checkInput = (input) => {
-	const regExp = /.*[\\`[\]{}].*/gi;
-	if (input.matches(regExp)) {
-		return input.replaceAll(regExp, "");
-	}
-	return input;
-};
+// const checkInput = (input) => {
+// 	const regExp = /.*[\\`[\]{}].*/gi;
+// 	if (input.match(regExp)) {
+// 		return input.replaceAll(regExp, "");
+// 	}
+// 	return input;
+// };
 
 const searchSlice = createSlice({
 	name: "search",
 	initialState: initialSearchState,
 	reducers: {
-		setTitle(state, action) {
+		setSearchText(state, action) {
+			console.log(action.payload);
 			const value = action.payload;
-			state.title = checkInput(value);
-		},
-		setBody(state, action) {
-			const value = action.payload;
-			state.body = checkInput(value);
-		},
-		setLocation(state, action) {
-			const value = action.payload;
-			state.location = checkInput(value);
+			state.searchText = value;
 		},
 		setStartDate(state, action) {
 			const value = action.payload;

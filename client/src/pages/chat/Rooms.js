@@ -32,7 +32,7 @@ const Rooms = () => {
 	const connect = () => {
 		const socket = new SockJS(`${process.env.REACT_APP_URL}/stomp/chat`);
 		client.current = Stomp.over(socket);
-		// client.current.debug = null;
+		client.current.debug = null;
 		client.current.connect(
 			{
 				access_hh: sessionStorage.getItem("AccessToken"),
@@ -72,5 +72,5 @@ const Rooms = () => {
 	);
 };
 
-export default Rooms;
+export default React.memo(Rooms);
 const SRooms = styled.div``;

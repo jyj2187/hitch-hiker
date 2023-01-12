@@ -40,6 +40,7 @@ public class MatchingDto {
         private String body;
         private Long memberId;
         private String memberName;
+        private String profileImage;
         private Long postId;
         private String postTitle;
         private Matching.MatchingStatus matchingStatus;
@@ -51,6 +52,7 @@ public class MatchingDto {
             this.body = body;
             this.memberId = member.getMemberId();
             this.memberName = member.getDisplayName();
+            this.profileImage = member.getProfileImage();
             this.postId = posts.getPostId();
             this.postTitle = posts.getTitle();
             this.matchingStatus = matchingStatus;

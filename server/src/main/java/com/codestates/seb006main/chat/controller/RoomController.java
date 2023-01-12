@@ -45,9 +45,9 @@ public class RoomController {
     }
 
     @GetMapping("/rooms/check")
-    public ResponseEntity checkRoom(@RequestParam String checkName, Authentication authentication) {
-        log.info("# Check Chat Room Exist, checkName: " + checkName);
-        RoomDto.Response response = roomService.checkRoom(checkName, authentication);
+    public ResponseEntity checkRoom(@RequestParam Long checkMemberId, Authentication authentication) {
+        log.info("# Check Chat Room Exist, checkMemberId: " + checkMemberId);
+        RoomDto.Response response = roomService.checkRoom(checkMemberId, authentication);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

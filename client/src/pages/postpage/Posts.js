@@ -10,13 +10,13 @@ import { ScrollRestoration, useNavigate } from "react-router-dom";
 // 페이지네이션
 import Pagination from "react-js-pagination";
 import "./Paging.css";
+import { ErrorHandler } from "../../util/ErrorHandler";
+import { searchActions } from "../../store/search-slice";
 
 const Posts = () => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const title = useSelector((state) => state.search.title);
-	const body = useSelector((state) => state.search.body);
-	const location = useSelector((state) => state.search.location);
+	const searchText = useSelector((state) => state.search.searchText);
 	const startDate = useSelector((state) => state.search.startDate);
 	const endDate = useSelector((state) => state.search.endDate);
 	const sort = useSelector((state) => state.filter.filterValue);
@@ -28,7 +28,7 @@ const Posts = () => {
 
 	useEffect(() => {
 		axios(
-			`${process.env.REACT_APP_URL}/api/posts?page=${page}&size=${size}&title=${title}&body=${body}&location=${location}&startDate=${startDate}&endDate=${endDate}&sort=${sort}`,
+			`${process.env.REACT_APP_URL}/api/posts?page=${page}&size=${size}&title=${searchText}&body=${searchText}&location=${searchText}&startDate=${startDate}&endDate=${endDate}&sort=${sort}`,
 			{
 				headers: {
 					access_hh: sessionStorage.getItem("AccessToken"),
@@ -40,42 +40,13 @@ const Posts = () => {
 				setTotalElements(res.data.pageInfo.totalElements);
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
+				dispatch(searchActions.setSearchText(""));
+				dispatch(searchActions.setStartDate(""));
+				dispatch(searchActions.setEndDate(""));
 				window.location.reload();
 			});
-	}, [page, size, title, body, location, startDate, endDate, sort]);
+	}, [page, size, searchText, startDate, endDate, sort]);
 
 	const handlePageChange = (page) => {
 		dispatch(pageActions.setPage(page));
@@ -92,7 +63,7 @@ const Posts = () => {
 						onClick={(e) => {
 							dispatch(filterActions.setFilter(e.target.value));
 						}}>
-						최신순(기본값)
+						최신순
 					</button>
 					<button
 						className={
@@ -174,11 +145,6 @@ const StyledPost = styled.div`
 		width: 87.72%;
 	}
 
-	.wrapper {
-		background-color: white;
-		border-radius: 10px;
-		box-shadow: 0px 3px 10px 1px rgba(0, 0, 0, 0.3);
-	}
 	ul {
 		list-style: none;
 		padding: 0;
@@ -230,7 +196,7 @@ const StyledPost = styled.div`
 	}
 	.filterbtn {
 		flex-grow: 1/0;
-		border-radius: 8px;
+		border-radius: 2rem;
 		margin: 5px;
 	}
 	.focusbtn {

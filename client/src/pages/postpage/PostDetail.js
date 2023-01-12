@@ -1,24 +1,50 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import styled from "styled-components";
+import { useNavigate, useParams } from "react-router-dom";
+import styled, { css } from "styled-components";
 
 // Toast-UI Viewer 임포트
 import "@toast-ui/editor/dist/toastui-editor-viewer.css";
 import { Editor, Viewer } from "@toast-ui/react-editor";
+import { ErrorHandler } from "../../util/ErrorHandler";
+import MatchingList from "./MatchingList";
+import ParticipantsList from "./ParticipantsList";
 
 const PostDetail = () => {
 	const navigate = useNavigate();
 	const { id } = useParams();
+	const memberId = sessionStorage.getItem("memberId");
 
-	const [detail, setDetail] = useState([]);
-	const [matchList, setMatchList] = useState([]);
+	const [detail, setDetail] = useState({});
+	const [matching, setMatching] = useState([]);
+	const [participants, setParticipants] = useState([]);
 	const [matchBody, setMatchBody] = useState("");
 	const [isbookmark, setIsBookmark] = useState(false);
 	const [mybookmark, setMyBookmark] = useState([]);
+	const [disabled, setDisabled] = useState(false);
+	const [matchingOpen, setMatchingOpen] = useState(false);
+	const [participantsOpen, setParticipantsOpen] = useState(false);
+
+	const openMatchingModal = () => {
+		setMatchingOpen(true);
+	};
+
+	const closeMatchingModal = () => {
+		setMatchingOpen(false);
+	};
+
+	const openParticipantsModal = () => {
+		setParticipantsOpen(true);
+	};
+
+	const closeParticipantsModal = () => {
+		setParticipantsOpen(false);
+	};
 
 	useEffect(() => {
+		setMatching([]);
+		setParticipants([]);
+		setDetail({});
 		axios(`${process.env.REACT_APP_URL}/api/posts/${id}`, {
 			headers: {
 				access_hh: sessionStorage.getItem("AccessToken"),
@@ -26,93 +52,19 @@ const PostDetail = () => {
 		})
 			.then((res) => {
 				setDetail(res.data);
+				if (
+					res.data.postsStatus === "모집 마감" ||
+					res.data.postsStatus === "모집 완료"
+				) {
+					setDisabled(true);
+				} else {
+					setDisabled(false);
+				}
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						if (
-							err.response.data.korMessage === "존재하지 않는 게시글입니다."
-						) {
-							alert(err.response.data.korMessage);
-							navigate(`/main`);
-						}
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
-				window.location.reload();
-			});
-
-		axios(`${process.env.REACT_APP_URL}/api/posts/${id}/matching`, {
-			headers: {
-				access_hh: sessionStorage.getItem("AccessToken"),
-			},
-		})
-			.then((res) => {
-				setMatchList(res.data.data);
-			})
-			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
-				window.location.reload();
+				ErrorHandler(err);
+				setTimeout(300);
+				navigate(-1);
 			});
 	}, [id]);
 
@@ -126,40 +78,7 @@ const PostDetail = () => {
 				setMyBookmark(res.data.postIds);
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
-				window.location.reload();
+				ErrorHandler(err);
 			});
 	}, [isbookmark]);
 
@@ -169,9 +88,38 @@ const PostDetail = () => {
 		setIsBookmark(bookmarked);
 	}, [mybookmark, detail.postId]);
 
+	const loadParticipants = () => {
+		axios(`${process.env.REACT_APP_URL}/api/posts/${id}/participants`, {
+			headers: {
+				access_hh: sessionStorage.getItem("AccessToken"),
+			},
+		})
+			.then((res) => {
+				setParticipants(res.data.data);
+			})
+			.catch((err) => {
+				ErrorHandler(err);
+			});
+	};
+
+	//TODO: pagination 필요. 화살표 등으로 넘기면 다음 20개를 가져오도록 설정하기
+	const loadMatching = () => {
+		axios(`${process.env.REACT_APP_URL}/api/posts/${id}/matching`, {
+			headers: {
+				access_hh: sessionStorage.getItem("AccessToken"),
+			},
+		})
+			.then((res) => {
+				setMatching(res.data.data);
+			})
+			.catch((err) => {
+				ErrorHandler(err);
+			});
+	};
+
 	const chatHandler = () => {
 		axios(
-			`${process.env.REACT_APP_URL}/api/chat/rooms/check?checkName=${detail.leaderName}`,
+			`${process.env.REACT_APP_URL}/api/chat/rooms/check?checkMemberId=${detail.leaderId}`,
 			{
 				headers: {
 					access_hh: sessionStorage.getItem("AccessToken"),
@@ -181,22 +129,26 @@ const PostDetail = () => {
 			.then((res) => {
 				if (res.data.roomId) {
 					navigate(`/chat/${res.data.roomId}`);
+					return;
 				}
 			})
 			.catch((err) => {
-				if (err.response.status === 500) {
-					alert("서버 오류입니다. 다시 시도해주세요.");
-					return;
-				}
-				if (err.response.status !== 0) {
-					alert(err.response.data.korMessage);
-					return;
-				}
-				if (err) {
-					alert("잘못된 접근 방법입니다. 다시 시도해주세요.");
-					return;
-				}
+				ErrorHandler(err);
 			});
+
+		axios(`${process.env.REACT_APP_URL}/api/chat/rooms`, {
+			headers: {
+				access_hh: sessionStorage.getItem("AccessToken"),
+			},
+			method: "POST",
+			data: {
+				otherId: detail.leaderId,
+			},
+		}).then((res) => {
+			alert("대화 요청을 전송하였습니다. 대화방으로 이동합니다.");
+			navigate(`/chat/${res.data.roomId}`);
+			// window.location.reload();
+		});
 	};
 
 	const bookmarkHandler = () => {
@@ -209,39 +161,7 @@ const PostDetail = () => {
 				},
 			}
 		).catch((err) => {
-			if (err.response.status === 400) {
-				if (err.response.data.fieldErrors) {
-					alert(err.response.data.fieldErrors[0].reason);
-				} else if (
-					err.response.data.fieldErrors === null &&
-					err.response.data.violationErrors
-				) {
-					alert(err.response.data.violationErrors[0].reason);
-				} else {
-					alert(
-						"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-					);
-				}
-			} else if (err.response.status === 0)
-				alert(
-					"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-				);
-			else {
-				if (
-					err.response.data.korMessage ===
-					"만료된 토큰입니다. 다시 로그인 해주세요."
-				) {
-					sessionStorage.clear();
-					navigate(`/`);
-					window.location.reload();
-				} else if (err.response.data.korMessage) {
-					alert(err.response.data.korMessage);
-				} else {
-					alert(
-						"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-					);
-				}
-			}
+			ErrorHandler(err);
 			window.location.reload();
 		});
 	};
@@ -261,45 +181,7 @@ const PostDetail = () => {
 				window.location.reload();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						if (
-							err.response.data.korMessage === "존재하지 않는 게시글입니다."
-						) {
-							alert(err.response.data.korMessage);
-							navigate(`/main`);
-						}
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 				window.location.reload();
 			});
 	};
@@ -316,93 +198,7 @@ const PostDetail = () => {
 				window.location.reload();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						if (
-							err.response.data.korMessage === "존재하지 않는 게시글입니다."
-						) {
-							alert(err.response.data.korMessage);
-							navigate(`/main`);
-						}
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
-			});
-	};
-
-	const kickParticipant = (memberPostId) => {
-		axios(`${process.env.REACT_APP_URL}/api/participants/${memberPostId}`, {
-			method: "DELETE",
-			headers: {
-				access_hh: sessionStorage.getItem("AccessToken"),
-			},
-		})
-			.then(() => {
-				window.location.reload();
-			})
-			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
-				window.location.reload();
+				ErrorHandler(err);
 			});
 	};
 
@@ -417,54 +213,17 @@ const PostDetail = () => {
 				window.location.reload();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (err.response.data.korMessage) {
-						if (
-							err.response.data.korMessage === "존재하지 않는 게시글입니다."
-						) {
-							alert(err.response.data.korMessage);
-							navigate(`/main`);
-						}
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 				window.location.reload();
 			});
 	};
 
 	return (
-		<PageContainer>
+		<PageContainer isModalOpen={participantsOpen || matchingOpen}>
 			<ContainerWrap>
 				<div className="titleWrapper">
-					<span>{detail.title}</span>
+					<span className="title">{detail.title}</span>
+					<span className="postsStatus">{detail.postsStatus}</span>
 					<button
 						className="heart"
 						onClick={() => {
@@ -472,7 +231,7 @@ const PostDetail = () => {
 						}}>
 						{isbookmark ? "❤️" : "🤍"}
 					</button>
-					{sessionStorage.getItem("userName") === detail.leaderName ? (
+					{memberId === String(detail.leaderId) ? (
 						<div className="postButton">
 							<button
 								onClick={() => {
@@ -492,8 +251,110 @@ const PostDetail = () => {
 				<div id="author" className="author">
 					{" "}
 					{detail.leaderName}
+					{memberId !== String(detail.leaderId) ? (
+						<button onClick={chatHandler}>대화 요청</button>
+					) : null}
 				</div>
 				<Container>
+					<MatchingContainer>
+						<div className="participants">
+							<div className="listInfo">
+								<p className="listLabel">참여자 명단</p>
+								<span className="count">{detail.participantsCount} 명</span>
+							</div>
+							{participants.length > 0 ? (
+								<>
+									<div className="scrollList">
+										{participants.map((el, idx) => (
+											<Match key={idx}>
+												<span>
+													<div className="memberItem">
+														<img src={el.profileImage} alt={el.profileImage} />
+														<span className="memberName">{el.displayName}</span>
+													</div>
+												</span>
+											</Match>
+										))}
+									</div>
+									<button
+										className="manageButton"
+										onClick={openParticipantsModal}>
+										자세히 보기
+									</button>
+									{participantsOpen && (
+										<ParticipantsList
+											open={openParticipantsModal}
+											close={closeParticipantsModal}
+											participants={participants}
+											loadParticipants={loadParticipants}
+											post={detail}
+										/>
+									)}
+								</>
+							) : (
+								<button className="loadData" onClick={loadParticipants}>
+									보기
+								</button>
+							)}
+						</div>
+						<div className="applicants">
+							<div className="listInfo">
+								<p className="listLabel">매칭 신청자</p>
+								<span className="count">{detail.matchingCount} 명</span>
+							</div>
+							{matching.length > 0 ? (
+								<>
+									<div className="scrollList">
+										{matching.map((el, idx) => (
+											<Match key={idx} status={el.matchingStatus}>
+												<div className="memberItem">
+													<img src={el.profileImage} alt={el.profileImage} />
+													<span className="memberName"> {el.memberName} </span>
+													<span className="matchingStatus">
+														{el.matchingStatus === "READ" && <span>읽음</span>}
+														{el.matchingStatus === "NOT_READ" && (
+															<span>읽지 않음</span>
+														)}
+														{el.matchingStatus === "REFUSED" && (
+															<span>거절</span>
+														)}
+														{el.matchingStatus === "ACCEPTED" && (
+															<span>수락</span>
+														)}
+													</span>
+												</div>
+											</Match>
+										))}
+									</div>
+									{memberId === String(detail.leaderId) && (
+										<>
+											<button
+												className="manageButton"
+												onClick={openMatchingModal}>
+												매칭관리
+											</button>
+											{matchingOpen && (
+												<MatchingList
+													open={openMatchingModal}
+													close={closeMatchingModal}
+													matchingList={matching}
+													loadMatching={loadMatching}
+													loadParticipants={loadParticipants}
+												/>
+											)}
+										</>
+									)}
+								</>
+							) : (
+								memberId === String(detail.leaderId) &&
+								detail.matchingCount > 0 && (
+									<button className="loadData" onClick={loadMatching}>
+										보기
+									</button>
+								)
+							)}
+						</div>
+					</MatchingContainer>
 					<ContentContainer>
 						<FlexContainer>
 							<span className="flexbody">
@@ -518,109 +379,33 @@ const PostDetail = () => {
 							</span>
 						</FlexContainer>
 						<BodyContainer>
-							<ReactMarkdown className="viewer">{detail.body}</ReactMarkdown>
+							{/* <ReactMarkdown className="viewer">{detail.body}</ReactMarkdown> */}
+							{detail.body && <Viewer initialValue={detail.body} />}
 						</BodyContainer>
 					</ContentContainer>
-					<MatchingContainer>
-						<div className="participants">
-							<p>참여자 명단</p>
-							{detail.participants &&
-								detail.participants.map((el, idx) => (
-									<Match key={idx}>
-										<span>
-											<div>
-												닉네임 : {el.displayName}
-												{sessionStorage.getItem("userName") ===
-													detail.leaderName &&
-												sessionStorage.getItem("userName") !==
-													el.displayName ? (
-													<button
-														onClick={() => {
-															kickParticipant(el.memberPostId);
-														}}>
-														여행 추방
-													</button>
-												) : null}
-												{sessionStorage.getItem("userName") !==
-													detail.leaderName &&
-												sessionStorage.getItem("userName") ===
-													el.displayName ? (
-													<button
-														onClick={() => {
-															kickParticipant(el.memberPostId);
-														}}>
-														참여 취소
-													</button>
-												) : null}
-											</div>
-											<div>자기소개 : {el.content}</div>
-										</span>
-									</Match>
-								))}
-						</div>
-						<div className="application">
-							{sessionStorage.getItem("userName") ===
-							detail.leaderName ? null : (
-								<Matchtext>
-									<p>매칭 신청하기</p>
-									<textarea
-										placeholder="10글자 이상 작성해주세요."
-										onChange={(e) => {
-											setMatchBody(e.target.value);
-										}}></textarea>
-									<button
-										onClick={() => {
-											matchSubmitHandler();
-										}}>
-										매칭 신청
-									</button>
-								</Matchtext>
-							)}
-						</div>
-						<div className="applicants">
-							<p>매칭 신청자 명단</p>
-							{matchList.map((el, idx) => (
-								<Match key={idx}>
-									<span>신청자 :</span>
-									<span className="hostname"> {el.memberName} </span>
-									<span className="isread">
-										{sessionStorage.getItem("userName") ===
-										detail.leaderName ? (
-											<div>
-												<button
-													className="matching"
-													onClick={() => {
-														navigate(`/match/${el.matchingId}`, {
-															state: el,
-														});
-													}}>
-													매칭관리
-												</button>
-											</div>
-										) : null}
-										{sessionStorage.getItem("userName") === el.memberName ? (
-											<div>
-												<button
-													onClick={() => {
-														withdrawal(el.matchingId);
-													}}>
-													신청 취소
-												</button>
-												<button
-													onClick={() => {
-														chatHandler();
-													}}>
-													대화하기
-												</button>
-											</div>
-										) : null}
-										{el.matchingStatus === "READ" ? <span>✅</span> : null}
-										{el.matchingStatus === "NOT_READ" ? <span>❌</span> : null}
-									</span>
-								</Match>
-							))}
-						</div>
-					</MatchingContainer>
+					<div className="application">
+						{memberId !== String(detail.leaderId) ? (
+							<Matchtext>
+								<p>매칭 신청하기</p>
+								<textarea
+									placeholder={
+										disabled
+											? "이미 완료 / 마감된 모집입니다."
+											: "10글자 이상 작성해주세요."
+									}
+									onChange={(e) => {
+										setMatchBody(e.target.value);
+									}}
+									disabled={disabled}></textarea>
+								<button
+									onClick={() => {
+										matchSubmitHandler();
+									}}>
+									매칭 신청
+								</button>
+							</Matchtext>
+						) : null}
+					</div>
 				</Container>
 			</ContainerWrap>
 		</PageContainer>
@@ -633,32 +418,37 @@ const PageContainer = styled.div`
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-
-	/* @media screen and (max-width: fit-content) {
-    padding: 30px 25px 30px 25px;
-    height: 700px;
-  } */
 `;
 
 const ContainerWrap = styled.div`
+	overflow-y: auto;
 	box-sizing: border-box;
-	margin: 3rem auto;
+	margin: 1rem auto;
 	padding: 1rem;
 	width: 87.72% !important;
 	max-width: 1080px;
+	height: fit-content;
 	min-height: 1024px;
-	background-color: rgba(255, 255, 255, 0.8);
+	background-color: rgba(255, 255, 255, 0.5);
 	box-shadow: 1px 5px 10px rgba(0, 0, 0, 0.1);
 	border-radius: 8px;
 
 	.titleWrapper {
 		display: flex;
 		align-items: center;
+		gap: 0.5rem;
 
-		span {
+		.title {
 			font-size: 2rem;
 			font-weight: 500;
 			color: #444;
+		}
+
+		.postsStatus {
+			padding: 0.25rem;
+			font-size: 1.25rem;
+			font-weight: 300;
+			color: rgba(0, 0, 138, 0.7);
 		}
 
 		.heart {
@@ -677,7 +467,7 @@ const ContainerWrap = styled.div`
 	}
 
 	#author {
-		margin: 0 0.2rem;
+		margin: 0.5rem 0.2rem;
 		color: darkblue;
 		font-weight: 600;
 		font-size: 1.3rem;
@@ -700,10 +490,6 @@ const ContainerWrap = styled.div`
 		}
 	}
 
-	.contents {
-		padding-left: 1rem;
-	}
-
 	@media screen and (max-width: 500px) {
 		padding: 30px 25px 30px 25px;
 		height: 455px;
@@ -712,7 +498,7 @@ const ContainerWrap = styled.div`
 
 const Container = styled.div`
 	display: flex;
-	flex-wrap: wrap;
+	flex-direction: column;
 	justify-content: space-between;
 	height: 100%;
 	grid-gap: 0.5rem;
@@ -739,10 +525,10 @@ const FlexContainer = styled.div`
 		color: darkblue;
 		font-weight: 600;
 		font-size: 1.125rem;
+		text-align: center;
 	}
 
 	.flexbody {
-		background: rgba(171, 217, 255, 0.3);
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -759,74 +545,142 @@ const FlexContainer = styled.div`
 const BodyContainer = styled.div`
 	border-top: 0.1rem solid black;
 	width: 100%;
+	overflow-x: auto;
 
-	.viewer {
-		padding: 10px;
-		font-size: 1.125rem;
-		line-height: 150%;
+	.toastui-editor-contents {
+		padding: 0.625rem;
+		min-height: 25rem;
+	}
+
+	.toastui-editor-contents p {
+		font-size: 1rem;
+		line-height: 120%;
 	}
 `;
 
 const MatchingContainer = styled.div`
-	flex: 1;
 	display: flex;
 	flex-direction: column;
-	padding-left: 0.5rem;
-	border-left: 0.05rem solid rgba(0, 0, 0, 0.3);
 
-	p {
+	.listLabel {
 		font-size: 1.25rem;
 		border-bottom: 0.025rem solid rgba(0, 0, 0, 0.3);
 		padding-bottom: 0.25rem;
+		margin-right: 0.5rem;
 	}
 
 	button {
 		margin-left: auto;
 	}
 
-	.participants {
-		flex: 1 0 50%;
+	.loadData {
+		margin-left: 1rem;
 	}
 
-	.application {
-		flex: 2 0 50%;
-		margin: 0.5rem 0;
+	.participants {
+		display: flex;
+		align-items: center;
+		height: 5rem;
 	}
 
 	.applicants {
-		flex: 1 0 50%;
+		display: flex;
+		align-items: center;
+		height: 6rem;
+	}
+
+	.application {
+		margin: 0.5rem 0;
+	}
+
+	.listInfo {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+
+		.count {
+			padding-top: 0.5rem;
+			text-align: center;
+		}
+	}
+
+	.scrollList {
+		display: flex;
+		overflow-x: auto;
 	}
 `;
 
 const Match = styled.div`
 	display: flex;
-	background: rgba(171, 217, 255, 0.3);
-	margin: 0.5rem auto;
+	margin: 0.5rem;
 
-	.hostname {
-		font-size: 1.2rem;
-	}
-
-	.matching {
-		padding: 1rem;
-		width: fit-content;
-	}
-
-	.isread {
-		margin-right: 10px;
-	}
 	button {
 		margin-left: 5px;
 		margin-right: 5px;
 	}
+
+	img {
+		width: 3rem;
+		height: 3rem;
+		border-radius: 50%;
+	}
+
+	.memberItem {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		width: 5rem;
+	}
+
+	.manageButton {
+		padding: 1rem;
+		width: fit-content;
+	}
+
+	.matchingStatus {
+		margin-top: auto;
+		font-size: 0.875rem;
+		color: rgba(0, 0, 0, 0.5);
+	}
+
+	${(props) =>
+		props.status === "REFUSED" &&
+		css`
+			img {
+				border: 1px solid red;
+				// TODO: filter 추가하면 z-index가 앞으로 튀어나온다. 배경 투명도를 조절 한 뒤 뒤로 보내서 눈속임 처리
+				// filter: grayscale(50%);
+				position: relative;
+				z-index: -1;
+			}
+
+			.matchingStatus {
+				color: red;
+			}
+		`}
+
+	${(props) =>
+		props.status === "ACCEPTED" &&
+		css`
+			img {
+				border: 1px solid green;
+			}
+
+			.matchingStatus {
+				color: green;
+			}
+		`}
 `;
 
 const Matchtext = styled.div`
 	display: flex;
 	flex-direction: column;
+	padding-top: 1rem;
+	border-top: 1px solid black;
 	textarea {
 		flex-grow: 1;
-		font-size: 17px;
+		font-size: 1rem;
 		height: 200px;
 		resize: none;
 		border: none;

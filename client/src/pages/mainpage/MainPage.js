@@ -8,7 +8,6 @@ const MainPage = () => {
 	return (
 		<>
 			<Flex>
-				<Outlet />
 				<Section>
 					<section>
 						<h1>Main Page</h1>
@@ -16,6 +15,7 @@ const MainPage = () => {
 					</section>
 				</Section>
 				<MainSubHeader />
+				<Outlet />
 				<Posts />
 			</Flex>
 		</>

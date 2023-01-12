@@ -2,22 +2,32 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
+import { ErrorHandler } from "../../util/ErrorHandler";
 
-const Matching = () => {
-	const { matchid } = useParams();
-	const [matchData, setMatchData] = useState([]);
+const Matching = ({
+	matchingId,
+	setMatchingData,
+	matchingData,
+	loadMatching,
+	loadParticipants,
+}) => {
 	const navigate = useNavigate();
 
 	// 매칭 데이터 가져오기
 	useEffect(() => {
-		axios(`${process.env.REACT_APP_URL}/api/matching/${matchid}`, {
+		axios(`${process.env.REACT_APP_URL}/api/matching/${matchingId}`, {
 			headers: {
 				access_hh: sessionStorage.getItem("AccessToken"),
 			},
-		}).then((res) => {
-			setMatchData(res.data);
-		});
-	}, [matchid]);
+		})
+			.then((res) => {
+				setMatchingData(res.data);
+				loadMatching();
+			})
+			.catch((err) => {
+				ErrorHandler(err);
+			});
+	}, [matchingId]);
 
 	// 채팅 요청 핸들러
 	const askChatHandler = () => {
@@ -27,12 +37,10 @@ const Matching = () => {
 			},
 			method: "POST",
 			data: {
-				otherId: matchData.memberId,
+				otherId: matchingData.memberId,
 			},
 		}).then(() => {
-			alert(
-				"대화 요청을 전송하였습니다. 대화방에 입장하려면 대화하기 버튼을 눌러주세요."
-			);
+			alert("대화 요청을 전송하였습니다.");
 			// window.location.reload();
 		});
 	};
@@ -41,7 +49,7 @@ const Matching = () => {
 	// 채팅방이 존재하면 채팅하기
 	const goChatHandler = () => {
 		axios(
-			`${process.env.REACT_APP_URL}/api/chat/rooms/check?checkName=${matchData.memberName}`,
+			`${process.env.REACT_APP_URL}/api/chat/rooms/check?checkMemberId=${matchingData.memberId}`,
 			{
 				headers: {
 					access_hh: sessionStorage.getItem("AccessToken"),
@@ -54,237 +62,119 @@ const Matching = () => {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status === 500) {
-					alert("서버 오류입니다. 다시 시도해주세요.");
-					return;
-				}
-				if (err.response.status !== 0) {
-					alert(err.response.data.korMessage);
-					return;
-				}
-				if (err) {
-					alert("잘못된 접근 방법입니다. 다시 시도해주세요.");
-					return;
-				}
+				ErrorHandler(err);
 			});
 	};
 
 	const acceptHandler = () => {
-		axios(`${process.env.REACT_APP_URL}/api/matching/${matchid}/accept`, {
+		axios(`${process.env.REACT_APP_URL}/api/matching/${matchingId}/accept`, {
 			headers: {
 				access_hh: sessionStorage.getItem("AccessToken"),
 			},
 		})
 			.then(() => {
-				navigate(`/post/${matchData.postId}`);
+				alert("요청을 수락하였습니다.");
+				loadMatching();
+				loadParticipants();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (
-						err.response.data.korMessage === "매칭 정보를 찾을 수 없습니다."
-					) {
-						alert(err.response.data.korMessage);
-						navigate(`/post/${matchData.postId}`);
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 				window.location.reload();
 			});
 	};
 
 	const refuseHandler = () => {
-		axios(`${process.env.REACT_APP_URL}/api/matching/${matchid}/refuse`, {
+		axios(`${process.env.REACT_APP_URL}/api/matching/${matchingId}/refuse`, {
 			headers: {
 				access_hh: sessionStorage.getItem("AccessToken"),
 			},
 		})
 			.then(() => {
-				navigate(`/post/${matchData.postId}`);
+				alert("요청을 거절하였습니다.");
+				loadMatching();
 			})
 			.catch((err) => {
-				if (err.response.status === 400) {
-					if (err.response.data.fieldErrors) {
-						alert(err.response.data.fieldErrors[0].reason);
-					} else if (
-						err.response.data.fieldErrors === null &&
-						err.response.data.violationErrors
-					) {
-						alert(err.response.data.violationErrors[0].reason);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				} else if (err.response.status === 0)
-					alert(
-						"서버 오류로 인해 불러올 수 없습니다. 조금 뒤에 다시 시도해주세요"
-					);
-				else {
-					if (
-						err.response.data.korMessage ===
-						"만료된 토큰입니다. 다시 로그인 해주세요."
-					) {
-						sessionStorage.clear();
-						navigate(`/`);
-						window.location.reload();
-					} else if (
-						err.response.data.korMessage === "매칭 정보를 찾을 수 없습니다."
-					) {
-						alert(err.response.data.korMessage);
-						navigate(`/post/${matchData.postId}`);
-					} else if (err.response.data.korMessage) {
-						alert(err.response.data.korMessage);
-					} else {
-						alert(
-							"우리도 무슨 오류인지 모르겠어요... 새로고침하고 다시 시도해주세요.... 미안합니다.....ㅠ"
-						);
-					}
-				}
+				ErrorHandler(err);
 				window.location.reload();
 			});
 	};
 
 	return (
-		<PageContainer>
-			<Container>
-				<ContentWrap>
-					<p>매칭 게시글 :</p>
-					<h1 className="title"> {matchData.postTitle}</h1>
-					<p>매칭 신청자 : </p>
-					<div className="person">{matchData.memberName}</div>
-					<p>매칭 내용 :</p>
-					<div className="contents"></div>
-					<MatchBody>{matchData.body}</MatchBody>
-					<span>
-						<Button
-							onClick={() => {
-								acceptHandler();
-							}}>
-							수락
-						</Button>
-						<Button
-							onClick={() => {
-								refuseHandler();
-							}}>
-							거절
-						</Button>
-						<Button
-							onClick={() => {
-								askChatHandler();
-							}}>
-							대화요청
-						</Button>
-						<Button
-							onClick={() => {
-								goChatHandler();
-							}}>
-							대화하기
-						</Button>
-					</span>
-				</ContentWrap>
-			</Container>
-		</PageContainer>
+		<MatchingContainer>
+			<ContentWrap>
+				<p>
+					신청자 : <span className="memberName">{matchingData.memberName}</span>
+				</p>
+				<p>신청 내용 : </p>
+				<div className="matchingBody">
+					<MatchBody>{matchingData.body}</MatchBody>
+				</div>
+				<span className="actions">
+					<button className="actionButton" onClick={acceptHandler}>
+						수락
+					</button>
+					<button className="actionButton" onClick={refuseHandler}>
+						거절
+					</button>
+					<button className="actionButton" onClick={askChatHandler}>
+						대화요청
+					</button>
+					<button className="actionButton" onClick={goChatHandler}>
+						대화하기
+					</button>
+				</span>
+			</ContentWrap>
+		</MatchingContainer>
 	);
 };
 
 export default Matching;
-const PageContainer = styled.div`
-	width: 100%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 0 5px 0 5px;
-
-	@media screen and (max-width: 1000px) {
-		padding: 30px 25px 30px 25px;
-		height: 700px;
-	}
-`;
-const Container = styled.div`
-	margin: 150px 0 250px 0;
-	padding: 40px 50px 40px 50px;
+const MatchingContainer = styled.div`
+	margin: 1rem auto;
+	padding: 1rem;
 	display: flex;
 	flex-direction: column;
+	width: 90% !important;
 	max-width: 800px;
-	width: 100%;
-	height: 900px;
-	background-color: #f5f5dc;
-
-	box-shadow: 0px 0px 11px rgba(0, 0, 0, 0.1);
-	border-radius: 8px;
-	font-family: Roboto;
-	box-sizing: border-box;
-	@media screen and (max-width: 1000px) {
-		padding: 30px 25px 30px 25px;
-		height: 455px;
-	}
+	box-shadow: 0px 0px 11px rgba(0, 0, 0, 0.3);
 `;
 const ContentWrap = styled.div`
+	margin: 0 auto;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
 	p {
+		padding-bottom: 0.5rem;
 		font-size: 1rem;
 	}
-	h1 {
-		font-size: 2.6rem;
-		font-weight: 700;
-		color: #666;
-	}
-	.person {
-		font-size: 2rem;
-		color: #425049;
+
+	.memberName {
+		font-size: 1.75rem;
 		font-weight: 600;
 	}
-	.contents {
-		font-size: 1.5rem;
-		color: #425049;
+
+	.matchingBody {
+		flex: 1;
+		width: 100%;
+		height: fit-content;
+		font-size: 1.25rem;
 		font-weight: 400;
 	}
+
+	.actions {
+		margin-top: auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	// .actionButton {
+	// 	margin: auto;
+	// }
 `;
 const MatchBody = styled.div`
-	background-color: #d5eaf1;
-	width: 70%;
-	height: 30vh;
-`;
-
-const Button = styled.button`
-	cursor: pointer;
-	font-size: 1rem;
-	background-color: #dabbc9;
-	width: fit-content;
-	border: 1px solid #dabbc9;
-	padding: 0.5rem 1rem;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-	color: #425049;
-	&:hover {
-		background-color: #efd5c8;
-		border-color: #efd5c8;
-	}
+	width: 100%;
+	height: fit-content;
 `;

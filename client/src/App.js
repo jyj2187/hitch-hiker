@@ -42,7 +42,7 @@ function App() {
 							<Route path="/" element={<Login />} />
 							<Route path="/main" element={<Main />} />
 							<Route path="/new" element={<NewPost />} />
-							<Route path="/post" element={<Main />}>
+							<Route path="/post/*" element={<Main />}>
 								<Route path=":id" element={<PostDetail />} />
 							</Route>
 							<Route path="/edit/:id" element={<EditPost />} />

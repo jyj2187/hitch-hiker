@@ -60,7 +60,7 @@ public class Matching extends Auditable {
     }
 
     public void checkPostsStatus() {
-        this.posts.checkStatus();
+        this.posts.changeStatus();
     }
 
     public void read() {

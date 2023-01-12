@@ -43,6 +43,13 @@ public class PostsRepositoryImpl implements PostsRepositoryCustom {
         return PageableExecutionUtils.getPage(content, pageRequest, countQuery::fetchOne);
     }
 
+    @Override
+    public void closeExpiredPosts(LocalDate now) {
+        queryFactory.update(posts)
+                .where(posts.closeDate.lt(now).and(posts.postsStatus.ne(Posts.PostsStatus.CLOSED)))
+                .set(posts.postsStatus, Posts.PostsStatus.CLOSED).execute();
+    }
+
     private JPAQuery<Long> getCountQuery(PostsCond postsCond) {
         return queryFactory
                 .select(posts.count())
