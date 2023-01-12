@@ -259,7 +259,7 @@ const PostDetail = () => {
 					<MatchingContainer>
 						<div className="participants">
 							<div className="listInfo">
-								<p>참여자 명단</p>
+								<p className="listLabel">참여자 명단</p>
 								<span className="count">{detail.participantsCount} 명</span>
 							</div>
 							{participants.length > 0 ? (
@@ -299,14 +299,14 @@ const PostDetail = () => {
 						</div>
 						<div className="applicants">
 							<div className="listInfo">
-								<p>매칭 신청자</p>
+								<p className="listLabel">매칭 신청자</p>
 								<span className="count">{detail.matchingCount} 명</span>
 							</div>
 							{matching.length > 0 ? (
 								<>
 									<div className="scrollList">
 										{matching.map((el, idx) => (
-											<Match key={idx}>
+											<Match key={idx} status={el.matchingStatus}>
 												<div className="memberItem">
 													<img src={el.profileImage} alt={el.profileImage} />
 													<span className="memberName"> {el.memberName} </span>
@@ -339,6 +339,7 @@ const PostDetail = () => {
 													close={closeMatchingModal}
 													matchingList={matching}
 													loadMatching={loadMatching}
+													loadParticipants={loadParticipants}
 												/>
 											)}
 										</>
@@ -428,7 +429,7 @@ const ContainerWrap = styled.div`
 	max-width: 1080px;
 	height: fit-content;
 	min-height: 1024px;
-	background-color: rgba(255, 255, 255, 0.8);
+	background-color: rgba(255, 255, 255, 0.5);
 	box-shadow: 1px 5px 10px rgba(0, 0, 0, 0.1);
 	border-radius: 8px;
 
@@ -466,7 +467,7 @@ const ContainerWrap = styled.div`
 	}
 
 	#author {
-		margin: 0 0.2rem;
+		margin: 0.5rem 0.2rem;
 		color: darkblue;
 		font-weight: 600;
 		font-size: 1.3rem;
@@ -487,10 +488,6 @@ const ContainerWrap = styled.div`
 			background-color: #efd5c8;
 			border-color: #efd5c8;
 		}
-	}
-
-	.contents {
-		padding-left: 1rem;
 	}
 
 	@media screen and (max-width: 500px) {
@@ -565,7 +562,7 @@ const MatchingContainer = styled.div`
 	display: flex;
 	flex-direction: column;
 
-	p {
+	.listLabel {
 		font-size: 1.25rem;
 		border-bottom: 0.025rem solid rgba(0, 0, 0, 0.3);
 		padding-bottom: 0.25rem;
@@ -609,7 +606,6 @@ const MatchingContainer = styled.div`
 
 	.scrollList {
 		display: flex;
-		align-items: center;
 		overflow-x: auto;
 	}
 `;
@@ -643,6 +639,7 @@ const Match = styled.div`
 	}
 
 	.matchingStatus {
+		margin-top: auto;
 		font-size: 0.875rem;
 		color: rgba(0, 0, 0, 0.5);
 	}
@@ -650,7 +647,17 @@ const Match = styled.div`
 	${(props) =>
 		props.status === "REFUSED" &&
 		css`
-			filter: grayscale(100%);
+			img {
+				border: 1px solid red;
+				// TODO: filter 추가하면 z-index가 앞으로 튀어나온다. 배경 투명도를 조절 한 뒤 뒤로 보내서 눈속임 처리
+				// filter: grayscale(50%);
+				position: relative;
+				z-index: -1;
+			}
+
+			.matchingStatus {
+				color: red;
+			}
 		`}
 
 	${(props) =>

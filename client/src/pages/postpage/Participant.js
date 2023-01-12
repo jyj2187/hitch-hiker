@@ -57,11 +57,11 @@ const Participant = ({ participant, loadParticipants, post }) => {
 };
 
 export default Participant;
-const Match = styled.div`
+const Match = styled.li`
 	display: flex;
 	align-items: center;
-	margin: 0.5rem auto;
-	padding: 0.5rem;
+	margin-top: 0.625rem;
+	padding-bottom: 0.625rem;
 	width: 100%;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.5);
 

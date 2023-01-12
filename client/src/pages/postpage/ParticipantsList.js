@@ -30,17 +30,22 @@ const ParticipantsList = ({
 				<ParticipantsListContainer>
 					{open ? (
 						<>
-							<button className="closeButton" onClick={close}>
-								닫기
-							</button>
-							{participants.map((el, idx) => (
-								<Participant
-									key={idx}
-									participant={el}
-									loadParticipants={loadParticipants}
-									post={post}
-								/>
-							))}
+							<header>
+								<p>참여자 명단</p>
+								<button className="closeButton" onClick={close}>
+									닫기
+								</button>
+							</header>
+							<ul className="listSection">
+								{participants.map((el, idx) => (
+									<Participant
+										key={idx}
+										participant={el}
+										loadParticipants={loadParticipants}
+										post={post}
+									/>
+								))}
+							</ul>
 						</>
 					) : null}
 				</ParticipantsListContainer>
@@ -63,14 +68,13 @@ const Modal = styled.div`
 `;
 
 const ParticipantsListContainer = styled.div`
-	overflow: auto;
 	width: 72% !important;
 	max-width: 960px;
 	min-height: 720px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 0 5px 0 5px;
+	padding: 0 0.5rem 0 0.5rem;
 	z-index: 999;
 
 	position: absolute;
@@ -81,7 +85,29 @@ const ParticipantsListContainer = styled.div`
 	background-color: white;
 	box-shadow: 1px 5px 10px rgba(0, 0, 0, 0.5);
 
+	header {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+
+		p {
+			margin: 0.5rem;
+			font-size: 1.5rem;
+			font-weight: 600;
+		}
+	}
+
 	.closeButton {
 		margin-left: auto;
+	}
+
+	.listSection {
+		width: 98.33%;
+		padding-right: 1rem;
+		display: flex;
+		flex-direction: column;
+		overflow-y: auto;
+		overflow-x: none;
 	}
 `;

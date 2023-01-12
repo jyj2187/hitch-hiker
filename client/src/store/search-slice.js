@@ -6,13 +6,13 @@ const initialSearchState = {
 	endDate: "",
 };
 
-const checkInput = (input) => {
-	const regExp = /.*[\\`[\]{}].*/gi;
-	if (input.match(regExp)) {
-		return input.replaceAll(regExp, "");
-	}
-	return input;
-};
+// const checkInput = (input) => {
+// 	const regExp = /.*[\\`[\]{}].*/gi;
+// 	if (input.match(regExp)) {
+// 		return input.replaceAll(regExp, "");
+// 	}
+// 	return input;
+// };
 
 const searchSlice = createSlice({
 	name: "search",

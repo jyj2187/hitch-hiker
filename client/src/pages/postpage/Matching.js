@@ -9,6 +9,7 @@ const Matching = ({
 	setMatchingData,
 	matchingData,
 	loadMatching,
+	loadParticipants,
 }) => {
 	const navigate = useNavigate();
 
@@ -74,6 +75,7 @@ const Matching = ({
 			.then(() => {
 				alert("요청을 수락하였습니다.");
 				loadMatching();
+				loadParticipants();
 			})
 			.catch((err) => {
 				ErrorHandler(err);
@@ -100,38 +102,26 @@ const Matching = ({
 	return (
 		<MatchingContainer>
 			<ContentWrap>
-				<p>매칭 게시글 :</p>
-				<h1 className="title"> {matchingData.postTitle}</h1>
-				<p>매칭 신청자 : </p>
-				<div className="person">{matchingData.memberName}</div>
-				<p>매칭 내용 :</p>
-				<div className="contents"></div>
-				<MatchBody>{matchingData.body}</MatchBody>
-				<span>
-					<Button
-						onClick={() => {
-							acceptHandler();
-						}}>
+				<p>
+					신청자 : <span className="memberName">{matchingData.memberName}</span>
+				</p>
+				<p>신청 내용 : </p>
+				<div className="matchingBody">
+					<MatchBody>{matchingData.body}</MatchBody>
+				</div>
+				<span className="actions">
+					<button className="actionButton" onClick={acceptHandler}>
 						수락
-					</Button>
-					<Button
-						onClick={() => {
-							refuseHandler();
-						}}>
+					</button>
+					<button className="actionButton" onClick={refuseHandler}>
 						거절
-					</Button>
-					<Button
-						onClick={() => {
-							askChatHandler();
-						}}>
+					</button>
+					<button className="actionButton" onClick={askChatHandler}>
 						대화요청
-					</Button>
-					<Button
-						onClick={() => {
-							goChatHandler();
-						}}>
+					</button>
+					<button className="actionButton" onClick={goChatHandler}>
 						대화하기
-					</Button>
+					</button>
 				</span>
 			</ContentWrap>
 		</MatchingContainer>
@@ -140,52 +130,51 @@ const Matching = ({
 
 export default Matching;
 const MatchingContainer = styled.div`
+	margin: 1rem auto;
+	padding: 1rem;
 	display: flex;
 	flex-direction: column;
-	width: 100%;
-	background-color: #f5f5dc;
-	box-shadow: 0px 0px 11px rgba(0, 0, 0, 0.1);
-	border-radius: 8px;
-	font-family: Roboto;
-	box-sizing: border-box;
+	width: 90% !important;
+	max-width: 800px;
+	box-shadow: 0px 0px 11px rgba(0, 0, 0, 0.3);
 `;
 const ContentWrap = styled.div`
+	margin: 0 auto;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
 	p {
+		padding-bottom: 0.5rem;
 		font-size: 1rem;
 	}
-	h1 {
-		font-size: 2.6rem;
-		font-weight: 700;
-		color: #666;
-	}
-	.person {
-		font-size: 2rem;
-		color: #425049;
+
+	.memberName {
+		font-size: 1.75rem;
 		font-weight: 600;
 	}
-	.contents {
-		font-size: 1.5rem;
-		color: #425049;
+
+	.matchingBody {
+		flex: 1;
+		width: 100%;
+		height: fit-content;
+		font-size: 1.25rem;
 		font-weight: 400;
 	}
+
+	.actions {
+		margin-top: auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	// .actionButton {
+	// 	margin: auto;
+	// }
 `;
 const MatchBody = styled.div`
-	background-color: #d5eaf1;
-	width: 70%;
-	height: 30vh;
-`;
-
-const Button = styled.button`
-	cursor: pointer;
-	font-size: 1rem;
-	background-color: #dabbc9;
-	width: fit-content;
-	border: 1px solid #dabbc9;
-	padding: 0.5rem 1rem;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-	color: #425049;
-	&:hover {
-		background-color: #efd5c8;
-		border-color: #efd5c8;
-	}
+	width: 100%;
+	height: fit-content;
 `;
