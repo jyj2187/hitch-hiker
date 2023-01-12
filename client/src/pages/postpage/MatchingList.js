@@ -8,6 +8,8 @@ const MatchingList = memo(({ open, close, matchingList, loadMatching }) => {
 	const [matchingId, setMatchingId] = useState("");
 	const [matchingData, setMatchingData] = useState({});
 
+	//TODO: pagination 필요. 화살표 등으로 넘기면 다음 20개를 가져오도록 설정하기
+
 	// 스크롤 방지
 	useEffect(() => {
 		document.body.style.cssText = `
@@ -36,33 +38,38 @@ const MatchingList = memo(({ open, close, matchingList, loadMatching }) => {
 							<button className="closeButton" onClick={close}>
 								닫기
 							</button>
-							{matchingId && (
-								<Matching
-									matchingId={matchingId}
-									setMatchingData={setMatchingData}
-									matchingData={matchingData}
-									loadMatching={loadMatching}
-								/>
-							)}
-							{matchingList.length > 0 ? (
-								matchingList.map((el, idx) => (
-									<Match key={idx} status={el.matchingStatus}>
-										<div
-											className="memberItem"
-											onClick={() => loadMatchingData(el.matchingId)}>
-											<span>신청자 :</span>
-											<img src={el.profileImage} alt={el.profileImage} />
-											<span className="memberName"> {el.memberName} </span>
-											<span className="matchingStatus">
-												{el.matchingStatus === "READ" && <span>읽음</span>}
-												{el.matchingStatus === "NOT_READ" && (
-													<span>읽지 않음</span>
-												)}
-												{el.matchingStatus === "REFUSED" && <span>거절</span>}
-												{el.matchingStatus === "ACCEPTED" && <span>수락</span>}
-											</span>
-										</div>
-										{/* {memberId === String(el.memberId) ? (
+							<div className="matchingSection">
+								{matchingId && (
+									<Matching
+										matchingId={matchingId}
+										setMatchingData={setMatchingData}
+										matchingData={matchingData}
+										loadMatching={loadMatching}
+									/>
+								)}
+							</div>
+							<div className="listSection">
+								{matchingList.length > 0 ? (
+									matchingList.map((el, idx) => (
+										<Match key={idx} status={el.matchingStatus}>
+											<div
+												className="memberItem"
+												onClick={() => loadMatchingData(el.matchingId)}>
+												<span>신청자 :</span>
+												<img src={el.profileImage} alt={el.profileImage} />
+												<span className="memberName"> {el.memberName} </span>
+												<span className="matchingStatus">
+													{el.matchingStatus === "READ" && <span>읽음</span>}
+													{el.matchingStatus === "NOT_READ" && (
+														<span>읽지 않음</span>
+													)}
+													{el.matchingStatus === "REFUSED" && <span>거절</span>}
+													{el.matchingStatus === "ACCEPTED" && (
+														<span>수락</span>
+													)}
+												</span>
+											</div>
+											{/* {memberId === String(el.memberId) ? (
 										<div>
 											<button
 												onClick={() => {
@@ -78,11 +85,12 @@ const MatchingList = memo(({ open, close, matchingList, loadMatching }) => {
 											</button>
 										</div>
 									) : null} */}
-									</Match>
-								))
-							) : (
-								<div>신청한 사람이 없습니다. 하하하하하하하하.</div>
-							)}
+										</Match>
+									))
+								) : (
+									<div>신청한 사람이 없습니다. 하하하하하하하하.</div>
+								)}
+							</div>
 						</>
 					) : null}
 					<Outlet />
@@ -120,11 +128,21 @@ const MatchingListContainer = styled.div`
 	transform: translate(-50%, -50%);
 
 	background-color: white;
-	box-shadow: 1px 5px 10px rgba(0, 0, 0, 0.1);
+	box-shadow: 1px 5px 10px rgba(0, 0, 0, 0.5);
 
 	.closeButton {
-		margin-bottom: auto;
 		margin-left: auto;
+	}
+
+	.matchingSection {
+		width: 100%;
+		min-height: 540px;
+	}
+
+	.listSection {
+		display: flex;
+		align-items: center;
+		overflow: auto;
 	}
 `;
 

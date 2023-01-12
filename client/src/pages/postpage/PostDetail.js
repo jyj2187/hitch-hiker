@@ -102,6 +102,7 @@ const PostDetail = () => {
 			});
 	};
 
+	//TODO: pagination 필요. 화살표 등으로 넘기면 다음 20개를 가져오도록 설정하기
 	const loadMatching = () => {
 		axios(`${process.env.REACT_APP_URL}/api/posts/${id}/matching`, {
 			headers: {
